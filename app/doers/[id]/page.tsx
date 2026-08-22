@@ -134,14 +134,6 @@ export default async function DoerProfilePage({ params, searchParams }: DoerProf
                 <User size={120} className="text-[#94A3B8] stroke-[1.25]" />
               )}
             </div>
-
-            {/* Active Doer Status Pill on bottom right of avatar */}
-            <div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6">
-              <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold bg-[#4F46E5] text-white shadow-md">
-                <span className="w-2 h-2 rounded-full bg-[#86EFAC] animate-pulse"></span>
-                Active Doer
-              </span>
-            </div>
           </div>
         </div>
 
