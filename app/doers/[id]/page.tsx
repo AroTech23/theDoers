@@ -4,8 +4,9 @@ import Link from 'next/link'
 import { MOCK_DOERS, MOCK_PROJECTS } from '@/lib/mockData'
 import Avatar from '@/components/ui/Avatar'
 import Badge from '@/components/ui/Badge'
+import Button from '@/components/ui/Button'
 import ProjectCard from '@/components/projects/ProjectCard'
-import { ArrowLeft, Globe, Code2, Share2 } from 'lucide-react'
+import { ArrowLeft, Globe, Code2, Share2, Edit3 } from 'lucide-react'
 
 interface DoerProfilePageProps {
   params: Promise<{ id: string }>
@@ -24,27 +25,38 @@ export default async function DoerProfilePage({ params, searchParams }: DoerProf
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-10 w-full flex flex-col gap-10">
-      {/* Dynamic Back link based on origin */}
-      <div>
-        {fromDashboard ? (
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-2 text-xs font-bold text-[#4F46E5] hover:text-[#3730A3] transition-colors bg-[#EEF2FF] px-3 py-1.5 rounded-lg"
-          >
-            <ArrowLeft size={16} /> Back to My Dashboard
-          </Link>
-        ) : (
-          <Link
-            href="/doers"
-            className="inline-flex items-center gap-2 text-xs font-bold text-[#6B7280] hover:text-[#111827] transition-colors"
-          >
-            <ArrowLeft size={16} /> Back to Doers
+      {/* Dynamic Top Bar: Contextual Back Link & Edit Portfolio Button if coming from workspace */}
+      <div className="flex items-center justify-between">
+        <div>
+          {fromDashboard ? (
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-2 text-xs font-bold text-[#4F46E5] hover:text-[#3730A3] transition-colors bg-[#EEF2FF] px-3 py-1.5 rounded-lg"
+            >
+              <ArrowLeft size={16} /> Back to My Dashboard
+            </Link>
+          ) : (
+            <Link
+              href="/doers"
+              className="inline-flex items-center gap-2 text-xs font-bold text-[#6B7280] hover:text-[#111827] transition-colors"
+            >
+              <ArrowLeft size={16} /> Back to Doers
+            </Link>
+          )}
+        </div>
+
+        {/* When user is viewing their own portfolio from dashboard */}
+        {fromDashboard && (
+          <Link href="/dashboard/profile">
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs font-semibold">
+              <Edit3 size={14} /> Edit Portfolio
+            </Button>
           </Link>
         )}
       </div>
 
       {/* Profile Header Card */}
-      <div className="bg-white border border-[#E5E7EB] rounded-2xl p-8 flex flex-col items-center text-center shadow-sm">
+      <div className="bg-white border border-[#E5E7EB] rounded-2xl p-8 flex flex-col items-center text-center shadow-sm relative">
         <Avatar name={doer.full_name} imageUrl={doer.avatar_url} size="lg" className="w-24 h-24 text-2xl mb-4" />
 
         <h1 className="text-3xl font-bold text-[#111827]">{doer.full_name}</h1>

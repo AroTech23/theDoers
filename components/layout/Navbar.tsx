@@ -1,15 +1,16 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import Button from '@/components/ui/Button'
 import Avatar from '@/components/ui/Avatar'
-import { useState } from 'react'
-import { Menu, X, LogOut, User } from 'lucide-react'
+import { useState, Suspense } from 'react'
+import { Menu, X, LogOut, LayoutDashboard } from 'lucide-react'
 
-export default function Navbar() {
+function NavbarContent() {
   const [menuOpen, setMenuOpen] = useState(false)
   const pathname = usePathname()
+  const searchParams = useSearchParams()
 
   // Hide the public navbar on admin pages, dashboard, and auth routes
   if (
@@ -22,7 +23,8 @@ export default function Navbar() {
     return null
   }
 
-  const isDoerLoggedIn = false // Set to false since dashboard has its own navbar
+  // Check if the visitor came from their dashboard workspace
+  const fromDashboard = searchParams?.get('from') === 'dashboard'
 
   return (
     <nav className="w-full bg-white border-b border-[#E5E7EB] sticky top-0 z-50">
@@ -44,10 +46,13 @@ export default function Navbar() {
 
         {/* Desktop Actions based on Auth State */}
         <div className="hidden md:flex items-center gap-3">
-          {isDoerLoggedIn ? (
-            /* When Doer is logged in */
+          {fromDashboard ? (
+            /* When Doer is viewing public pages from their workspace */
             <div className="flex items-center gap-4">
-              <Link href="/dashboard" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
+              <Link href="/dashboard" className="flex items-center gap-2 text-xs font-bold text-[#4F46E5] bg-[#EEF2FF] hover:bg-[#E0E7FF] px-3 py-1.5 rounded-lg transition-colors">
+                <LayoutDashboard size={14} /> My Dashboard
+              </Link>
+              <Link href="/dashboard/profile" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                 <Avatar name="Alex Chen" size="sm" />
                 <span className="text-xs font-bold text-[#111827]">Alex Chen</span>
               </Link>
@@ -58,7 +63,7 @@ export default function Navbar() {
               </Link>
             </div>
           ) : (
-            /* When Visitor is not logged in */
+            /* When Visitor is browsing publicly */
             <>
               <Link href="/login">
                 <Button variant="ghost" size="md">Log In</Button>
@@ -98,10 +103,12 @@ export default function Navbar() {
             About
           </Link>
           <div className="flex flex-col gap-2 pt-2 border-t border-[#E5E7EB]">
-            {isDoerLoggedIn ? (
+            {fromDashboard ? (
               <>
                 <Link href="/dashboard" onClick={() => setMenuOpen(false)}>
-                  <Button variant="primary" size="md" className="w-full">My Dashboard</Button>
+                  <Button variant="primary" size="md" className="w-full gap-2">
+                    <LayoutDashboard size={16} /> My Dashboard
+                  </Button>
                 </Link>
                 <Link href="/login" onClick={() => setMenuOpen(false)}>
                   <Button variant="outline" size="md" className="w-full">Log Out</Button>
@@ -121,5 +128,13 @@ export default function Navbar() {
         </div>
       )}
     </nav>
+  )
+}
+
+export default function Navbar() {
+  return (
+    <Suspense fallback={null}>
+      <NavbarContent />
+    </Suspense>
   )
 }
