@@ -6,8 +6,14 @@ import { usePathname } from 'next/navigation'
 export default function Footer() {
   const pathname = usePathname()
 
-  // Hide the public footer on admin pages so the admin footer remains clean
-  if (pathname?.startsWith('/admin')) {
+  // Hide the public footer on admin pages, dashboard, and auth routes
+  if (
+    pathname?.startsWith('/admin') ||
+    pathname?.startsWith('/dashboard') ||
+    pathname === '/login' ||
+    pathname === '/register' ||
+    pathname?.startsWith('/forgot-password')
+  ) {
     return null
   }
 

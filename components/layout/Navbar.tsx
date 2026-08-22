@@ -11,13 +11,18 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const pathname = usePathname()
 
-  // If we are in the admin section, hide the public navbar completely (Admin has its own dedicated navbar)
-  if (pathname?.startsWith('/admin')) {
+  // Hide the public navbar on admin pages, dashboard, and auth routes
+  if (
+    pathname?.startsWith('/admin') ||
+    pathname?.startsWith('/dashboard') ||
+    pathname === '/login' ||
+    pathname === '/register' ||
+    pathname?.startsWith('/forgot-password')
+  ) {
     return null
   }
 
-  // Check if the user is in the Doer workspace
-  const isDoerLoggedIn = pathname?.startsWith('/dashboard')
+  const isDoerLoggedIn = false // Set to false since dashboard has its own navbar
 
   return (
     <nav className="w-full bg-white border-b border-[#E5E7EB] sticky top-0 z-50">

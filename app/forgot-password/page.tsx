@@ -1,135 +1,170 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import Link from 'next/link'
-import Button from '@/components/ui/Button'
-import { Mail, Lock, ArrowRight, CheckCircle2, ArrowLeft } from 'lucide-react'
+import { useState } from 'react';
+import Link from 'next/link';
+import { Eye, EyeOff, CheckCircle2 } from 'lucide-react';
+import AuthNavbar from '@/components/layout/AuthNavbar';
+
+type Step = 'request' | 'reset' | 'success';
 
 export default function ForgotPasswordPage() {
-  const [step, setStep] = useState<'request' | 'reset' | 'success'>('request')
-  const [email, setEmail] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
+  const [step, setStep] = useState<Step>('request');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleRequestSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setStep('reset')
-  }
+    e.preventDefault();
+    setStep('reset');
+  };
 
   const handleResetSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setStep('success')
-  }
+    e.preventDefault();
+    setStep('success');
+  };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-6 py-12">
-      <div className="w-full max-w-md bg-white border border-[#E5E7EB] rounded-2xl p-8 shadow-sm">
-        {/* Step 1: Forgot Password Request */}
-        {step === 'request' && (
-          <div>
-            <div className="text-center mb-6">
-              <h1 className="text-2xl font-bold text-[#111827]">Forgot Password</h1>
-              <p className="text-xs text-[#6B7280] mt-1.5">
-                Enter your student email and we will send you instructions to reset your password.
-              </p>
-            </div>
+    <div className="min-h-screen flex flex-col bg-[#F9FAFB]">
+      <AuthNavbar rightLink={
+        step === 'success' 
+          ? { label: 'Log In', href: '/login' } 
+          : { label: 'Log In', href: '/login' }
+      } />
+      
+      <main className="flex-1 flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-[#E5E7EB] p-8">
+          
+          {step === 'request' && (
+            <>
+              <div className="text-center mb-8">
+                <h1 className="text-2xl font-bold text-[#111827] mb-2">Forgot your password?</h1>
+                <p className="text-[#6B7280]">Enter your email address and we'll send you instructions to reset your password.</p>
+              </div>
 
-            <form onSubmit={handleRequestSubmit} className="flex flex-col gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-[#374151] mb-1.5">Email Address</label>
-                <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9CA3AF]" size={16} />
+              <form onSubmit={handleRequestSubmit} className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-[#111827] mb-1">
+                    Email Address *
+                  </label>
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="student@university.edu"
-                    className="w-full pl-10 pr-4 py-2.5 border border-[#E5E7EB] rounded-lg text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
+                    className="w-full px-4 py-2 border border-[#E5E7EB] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
                   />
                 </div>
+
+                <button
+                  type="submit"
+                  className="w-full bg-[#1F2937] text-white py-3 rounded-lg font-medium hover:bg-[#111827] transition-colors flex items-center justify-center gap-2"
+                >
+                  Send Reset Instructions <span aria-hidden="true">&rarr;</span>
+                </button>
+                
+                <div className="text-center">
+                  <Link href="/login" className="text-sm font-medium text-[#4F46E5] hover:text-[#3730A3]">
+                    &larr; Back to Log In
+                  </Link>
+                </div>
+              </form>
+            </>
+          )}
+
+          {step === 'reset' && (
+            <>
+              <div className="text-center mb-8">
+                <h1 className="text-2xl font-bold text-[#111827] mb-2">Create a new password</h1>
+                <p className="text-[#6B7280]">Choose a new password for your theDoers account.</p>
               </div>
 
-              <Button type="submit" variant="primary" size="lg" className="w-full mt-2 gap-2">
-                Send Reset Link <ArrowRight size={16} />
-              </Button>
-            </form>
+              <form onSubmit={handleResetSubmit} className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-[#111827] mb-1">
+                    New Password *
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full px-4 py-2 border border-[#E5E7EB] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7280] hover:text-[#111827]"
+                    >
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+                  <p className="text-xs text-[#6B7280] mt-1">At least 8 characters</p>
+                </div>
 
-            <div className="text-center mt-6 pt-4 border-t border-[#F3F4F6]">
-              <Link href="/login" className="text-xs font-semibold text-[#4F46E5] hover:underline inline-flex items-center gap-1">
-                <ArrowLeft size={14} /> Back to Login
+                <div>
+                  <label className="block text-sm font-medium text-[#111827] mb-1">
+                    Confirm New Password *
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      required
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="w-full px-4 py-2 border border-[#E5E7EB] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6B7280] hover:text-[#111827]"
+                    >
+                      {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full bg-[#1F2937] text-white py-3 rounded-lg font-medium hover:bg-[#111827] transition-colors flex items-center justify-center gap-2"
+                >
+                  Reset Password <span aria-hidden="true">&rarr;</span>
+                </button>
+              </form>
+            </>
+          )}
+
+          {step === 'success' && (
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#EEF2FF] text-[#4F46E5] mb-6">
+                <CheckCircle2 size={32} />
+              </div>
+              <h1 className="text-2xl font-bold text-[#111827] mb-2">Password reset successful</h1>
+              <p className="text-[#6B7280] mb-8">Your password has been updated. You can now log in with your new password.</p>
+              
+              <Link
+                href="/login"
+                className="w-full bg-[#1F2937] text-white py-3 rounded-lg font-medium hover:bg-[#111827] transition-colors flex items-center justify-center gap-2"
+              >
+                Log In <span aria-hidden="true">&rarr;</span>
               </Link>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Step 2: Reset Password Form */}
-        {step === 'reset' && (
-          <div>
-            <div className="text-center mb-6">
-              <h1 className="text-2xl font-bold text-[#111827]">Reset Password</h1>
-              <p className="text-xs text-[#6B7280] mt-1.5">
-                Create a new secure password for your student account.
-              </p>
-            </div>
+        </div>
+      </main>
 
-            <form onSubmit={handleResetSubmit} className="flex flex-col gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-[#374151] mb-1.5">New Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9CA3AF]" size={16} />
-                  <input
-                    type="password"
-                    required
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full pl-10 pr-4 py-2.5 border border-[#E5E7EB] rounded-lg text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-[#374151] mb-1.5">Confirm New Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9CA3AF]" size={16} />
-                  <input
-                    type="password"
-                    required
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full pl-10 pr-4 py-2.5 border border-[#E5E7EB] rounded-lg text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
-                  />
-                </div>
-              </div>
-
-              <Button type="submit" variant="primary" size="lg" className="w-full mt-2">
-                Save New Password
-              </Button>
-            </form>
-          </div>
-        )}
-
-        {/* Step 3: Password Reset Successful */}
-        {step === 'success' && (
-          <div className="text-center flex flex-col items-center">
-            <div className="w-14 h-14 bg-[#DEF7EC] text-[#03543F] rounded-full flex items-center justify-center mb-3">
-              <CheckCircle2 size={32} />
-            </div>
-            <h1 className="text-2xl font-bold text-[#111827]">Password Reset Complete</h1>
-            <p className="text-xs text-[#6B7280] mt-1.5 leading-relaxed">
-              Your password has been successfully updated. You can now log into your Doer account with your new credentials.
-            </p>
-
-            <Link href="/login" className="w-full mt-6">
-              <Button variant="primary" size="lg" className="w-full">
-                Go to Login
-              </Button>
-            </Link>
-          </div>
-        )}
-      </div>
+      <footer className="py-6 px-4 md:px-8 border-t border-[#E5E7EB] flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-[#6B7280]">
+        <div className="font-medium text-[#111827]">theDoers</div>
+        <div>© 2024 theDoers</div>
+        <div className="flex gap-4">
+          <Link href="#" className="hover:text-[#111827]">Terms of Service</Link>
+          <Link href="#" className="hover:text-[#111827]">Privacy Policy</Link>
+          <Link href="#" className="hover:text-[#111827]">Support</Link>
+        </div>
+      </footer>
     </div>
-  )
+  );
 }
