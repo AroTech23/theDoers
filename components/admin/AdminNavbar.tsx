@@ -14,8 +14,8 @@ export default function AdminNavbar() {
   ]
 
   return (
-    <header className="w-full bg-white border-b border-[#E5E7EB] sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+    <header className="w-full bg-white border-b border-[#E2E8F0] sticky top-0 z-50">
+      <div className="w-full px-6 md:px-8 h-16 flex items-center justify-between">
         {/* Logo and primary navigation links */}
         <div className="flex items-center gap-10">
           <Link href="/" className="flex items-center gap-2.5 text-xl font-bold text-[#111827] hover:text-[#4F46E5] transition-colors group">
