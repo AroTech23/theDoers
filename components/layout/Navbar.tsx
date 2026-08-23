@@ -59,7 +59,7 @@ function NavbarContent() {
                   : 'text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC]'
               }`}
             >
-              About
+              About Us
             </Link>
           </div>
         </div>
@@ -120,7 +120,7 @@ function NavbarContent() {
             className={`text-sm font-medium ${isAboutActive ? 'text-[#4F46E5] font-bold' : 'text-[#6B7280]'}`}
             onClick={() => setMenuOpen(false)}
           >
-            About
+            About Us
           </Link>
           <div className="flex flex-col gap-2 pt-2 border-t border-[#E5E7EB]">
             {fromDashboard ? (
