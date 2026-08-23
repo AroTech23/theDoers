@@ -22,7 +22,9 @@ import {
   AlertCircle,
   CheckCircle2,
   TrendingUp,
-  Loader2
+  Loader2,
+  Plus,
+  Eye
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -31,8 +33,8 @@ import { createClient } from '@/lib/supabase/client';
 const STEPS = [
   'Project Basics',
   'Project Story',
-  'Visuals & Resources',
-  'Review & Publish'
+  'Visuals & Screenshots',
+  'Live Card Preview & Publish'
 ];
 
 function CreateProjectWizard() {
@@ -49,9 +51,9 @@ function CreateProjectWizard() {
   // Step 1: Basics
   const [title, setTitle] = useState('');
   const [shortDescription, setShortDescription] = useState('');
-  const [category, setCategory] = useState('AI / Machine Learning');
-  const [market, setMarket] = useState('Education / EdTech');
-  const [tags, setTags] = useState<string[]>(['React', 'TypeScript', 'Node.js']);
+  const [category, setCategory] = useState('IoT & Embedded');
+  const [market, setMarket] = useState('Environment / Sustainability');
+  const [tags, setTags] = useState<string[]>(['Rust', 'ESP32', 'Next.js', 'PostgreSQL']);
   const [tagInput, setTagInput] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   
@@ -61,13 +63,20 @@ function CreateProjectWizard() {
   const [desiredState, setDesiredState] = useState('');
   const [solution, setSolution] = useState('');
   const [result, setResult] = useState('');
-  const [metricValue, setMetricValue] = useState('40%');
-  const [metricDesc, setMetricDesc] = useState('Reduction in processing latency');
+  const [metricValue, setMetricValue] = useState('38.5%');
+  const [metricDesc, setMetricDesc] = useState('Reduction in off-peak electrical waste');
   const [processSteps, setProcessSteps] = useState([
-    { id: 1, title: 'Architecture & System Design', description: 'Defined the system boundaries, data flow, and core technology stack.' }
+    { id: 1, title: 'Hardware Sensor & Microcontroller Prototyping', description: 'Calibrated non-invasive CT current sensors with ESP32 microcontrollers sampling at 1kHz.' },
+    { id: 2, title: 'Edge Firmware in Rust', description: 'Wrote memory-safe firmware to compute True-RMS power and publish compressed telemetry over MQTT.' },
+    { id: 3, title: 'Full-Stack Telemetry Dashboard', description: 'Constructed high-frequency time-series charts in Next.js with WebSocket streaming and PostgreSQL storage.' }
   ]);
   
-  // Step 3: Visuals & Resources
+  // Step 3: Visuals, Screenshots & Resources
+  const [screenshots, setScreenshots] = useState<string[]>([
+    'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80',
+    'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&auto=format&fit=crop&q=80'
+  ]);
+  const [screenshotInput, setScreenshotInput] = useState('');
   const [liveUrl, setLiveUrl] = useState('');
   const [githubUrl, setGithubUrl] = useState('');
   const [docUrl, setDocUrl] = useState('');
@@ -78,7 +87,7 @@ function CreateProjectWizard() {
       if (!editId) return;
       try {
         setLoading(true);
-        const { data: project, error } = await supabase
+        const { data: project } = await supabase
           .from('projects')
           .select('*')
           .eq('id', editId)
@@ -87,8 +96,8 @@ function CreateProjectWizard() {
         if (project) {
           setTitle(project.title || '');
           setShortDescription(project.description || '');
-          setCategory(project.category || 'AI / Machine Learning');
-          setMarket(project.market || 'Education / EdTech');
+          setCategory(project.category || 'IoT & Embedded');
+          setMarket(project.market || 'Environment / Sustainability');
           setTags(project.tags || []);
           setImageUrl(project.image_url || '');
           setProblem(project.problem || '');
@@ -102,6 +111,9 @@ function CreateProjectWizard() {
           }
           if (project.process_steps && Array.isArray(project.process_steps)) {
             setProcessSteps(project.process_steps);
+          }
+          if (project.screenshots && Array.isArray(project.screenshots)) {
+            setScreenshots(project.screenshots);
           }
           setLiveUrl(project.live_url || '');
           setGithubUrl(project.github_url || '');
@@ -147,6 +159,20 @@ function CreateProjectWizard() {
     setTags(tags.filter((_, index) => index !== indexToRemove));
   };
 
+  const addScreenshot = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && screenshotInput.trim() && screenshots.length < 6) {
+      e.preventDefault();
+      if (!screenshots.includes(screenshotInput.trim())) {
+        setScreenshots([...screenshots, screenshotInput.trim()]);
+      }
+      setScreenshotInput('');
+    }
+  };
+
+  const removeScreenshot = (indexToRemove: number) => {
+    setScreenshots(screenshots.filter((_, index) => index !== indexToRemove));
+  };
+
   const addProcessStep = () => {
     setProcessSteps([
       ...processSteps, 
@@ -187,6 +213,7 @@ function CreateProjectWizard() {
         result: result.trim() || null,
         key_metric: metricValue ? { value: metricValue, label: metricDesc } : null,
         process_steps: processSteps,
+        screenshots: screenshots,
         live_url: liveUrl.trim() || null,
         github_url: githubUrl.trim() || null,
         doc_url: docUrl.trim() || null,
@@ -301,7 +328,7 @@ function CreateProjectWizard() {
                   type="text" 
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. AI-Powered Distributed Cache System" 
+                  placeholder="e.g. Autonomous IoT Energy Monitoring & Anomaly Detection System" 
                   className="w-full rounded-xl border border-[#E2E8F0] px-4 py-2.5 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]" 
                 />
               </div>
@@ -316,7 +343,7 @@ function CreateProjectWizard() {
                   maxLength={160}
                   value={shortDescription}
                   onChange={(e) => setShortDescription(e.target.value)}
-                  placeholder="A concise overview of what this project does, why you built it, and its core benefit..." 
+                  placeholder="An embedded sensor network and real-time dashboard that monitors university laboratory power consumption..." 
                   className="w-full rounded-xl border border-[#E2E8F0] px-4 py-2.5 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]" 
                 />
               </div>
@@ -329,10 +356,10 @@ function CreateProjectWizard() {
                     onChange={(e) => setCategory(e.target.value)}
                     className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5] bg-white"
                   >
+                    <option>IoT &amp; Embedded</option>
                     <option>AI / Machine Learning</option>
                     <option>Web Development</option>
                     <option>Mobile Development</option>
-                    <option>IoT & Embedded</option>
                     <option>Data Science</option>
                     <option>Cybersecurity</option>
                     <option>Cloud Infrastructure</option>
@@ -346,12 +373,12 @@ function CreateProjectWizard() {
                     onChange={(e) => setMarket(e.target.value)}
                     className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5] bg-white"
                   >
+                    <option>Environment / Sustainability</option>
                     <option>Education / EdTech</option>
                     <option>Smart Home / IoT</option>
                     <option>Finance / FinTech</option>
                     <option>Health / MedTech</option>
                     <option>Transportation / Mobility</option>
-                    <option>Environment / Sustainability</option>
                     <option>Business Intelligence</option>
                   </select>
                 </div>
@@ -373,21 +400,22 @@ function CreateProjectWizard() {
                     value={tagInput}
                     onChange={(e) => setTagInput(e.target.value)}
                     onKeyDown={addTag}
-                    placeholder="Type technology & press Enter (e.g. Docker, Rust)..."
+                    placeholder="Type technology & press Enter (e.g. Rust, ESP32)..."
                     className="flex-1 min-w-[160px] outline-none text-[#0F172A] text-xs py-1"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5">Cover Image URL (Optional)</label>
+                <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5">Primary Cover Image URL</label>
                 <input 
                   type="url" 
                   value={imageUrl}
                   onChange={(e) => setImageUrl(e.target.value)}
-                  placeholder="https://images.unsplash.com/... or leave blank for dynamic banner" 
+                  placeholder="https://images.unsplash.com/photo-1518770660439-4636190af475..." 
                   className="w-full rounded-xl border border-[#E2E8F0] px-4 py-2.5 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]" 
                 />
+                <p className="text-[11px] text-[#64748B] mt-1">This image appears as the main thumbnail on public portfolio grids.</p>
               </div>
             </div>
           </div>
@@ -458,7 +486,7 @@ function CreateProjectWizard() {
                       </div>
                       <input 
                         type="text"
-                        placeholder="Step Title (e.g. Database Schema Normalization)"
+                        placeholder="Step Title (e.g. Edge Firmware in Rust)"
                         value={step.title}
                         onChange={(e) => updateProcessStep(step.id, 'title', e.target.value)}
                         className="w-full rounded-xl border border-[#E2E8F0] px-3 py-1.5 text-xs text-[#0F172A] bg-white focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
@@ -493,7 +521,7 @@ function CreateProjectWizard() {
                     type="text" 
                     value={metricValue}
                     onChange={(e) => setMetricValue(e.target.value)}
-                    placeholder="e.g. 40%" 
+                    placeholder="e.g. 38.5%" 
                     className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]" 
                   />
                 </div>
@@ -503,7 +531,7 @@ function CreateProjectWizard() {
                     type="text" 
                     value={metricDesc}
                     onChange={(e) => setMetricDesc(e.target.value)}
-                    placeholder="e.g. Latency reduction across API endpoints" 
+                    placeholder="e.g. Reduction in off-peak laboratory electrical waste" 
                     className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]" 
                   />
                 </div>
@@ -512,15 +540,65 @@ function CreateProjectWizard() {
           </div>
         )}
 
-        {/* ── STEP 3: VISUALS & RESOURCES ── */}
+        {/* ── STEP 3: VISUALS, SCREENSHOTS & RESOURCES ── */}
         {currentStep === 3 && (
           <div className="bg-white rounded-3xl border border-[#E2E8F0] p-6 sm:p-8 shadow-xs space-y-6">
             <div className="border-b border-[#F1F5F9] pb-4">
-              <h2 className="text-xl font-bold text-[#0F172A]">3. Visuals &amp; External Resources</h2>
-              <p className="text-xs text-[#64748B] mt-0.5">Add your repository, live demo, and documentation links.</p>
+              <h2 className="text-xl font-bold text-[#0F172A]">3. Screenshots &amp; External Resources</h2>
+              <p className="text-xs text-[#64748B] mt-0.5">Showcase your project in action with screenshots, repository, and live demo links.</p>
             </div>
 
-            <div className="space-y-4">
+            {/* Screenshots Gallery Section */}
+            <div className="space-y-3">
+              <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider">
+                Project Screenshots ({screenshots.length}/6)
+              </label>
+              
+              {/* Screenshots Grid Preview */}
+              {screenshots.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl">
+                  {screenshots.map((src, i) => (
+                    <div key={i} className="relative group rounded-xl overflow-hidden border border-[#E2E8F0] aspect-video bg-slate-100">
+                      <img src={src} alt={`Screenshot ${i + 1}`} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => removeScreenshot(i)}
+                        className="absolute top-1.5 right-1.5 p-1 bg-[#EF4444] text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity shadow-xs"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Add Screenshot URL Input */}
+              <div className="flex gap-2">
+                <input 
+                  type="url" 
+                  value={screenshotInput}
+                  onChange={(e) => setScreenshotInput(e.target.value)}
+                  onKeyDown={addScreenshot}
+                  placeholder="Paste screenshot image URL and press Enter (e.g. Unsplash, Cloudinary, Imgur)..." 
+                  className="flex-1 rounded-xl border border-[#E2E8F0] px-4 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]" 
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (screenshotInput.trim() && screenshots.length < 6) {
+                      setScreenshots([...screenshots, screenshotInput.trim()]);
+                      setScreenshotInput('');
+                    }
+                  }}
+                  className="px-4 py-2 bg-[#0F172A] text-white text-xs font-bold rounded-xl hover:bg-[#1E293B] transition-colors"
+                >
+                  Add Image
+                </button>
+              </div>
+              <p className="text-[11px] text-[#64748B]">These screenshots will appear in the detailed case study page gallery.</p>
+            </div>
+
+            <div className="border-t border-[#F1F5F9] pt-4 space-y-4">
               <div>
                 <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                   <Code2 size={14} /> GitHub Repository URL
@@ -563,33 +641,79 @@ function CreateProjectWizard() {
           </div>
         )}
 
-        {/* ── STEP 4: REVIEW & PUBLISH ── */}
+        {/* ── STEP 4: LIVE PUBLIC CARD PREVIEW & PUBLISH ── */}
         {currentStep === 4 && (
           <div className="bg-white rounded-3xl border border-[#E2E8F0] p-6 sm:p-8 shadow-xs space-y-6">
             <div className="border-b border-[#F1F5F9] pb-4">
-              <h2 className="text-xl font-bold text-[#0F172A]">4. Review &amp; Publish</h2>
-              <p className="text-xs text-[#64748B] mt-0.5">Review your case study before publishing it to your live portfolio.</p>
+              <h2 className="text-xl font-bold text-[#0F172A] flex items-center gap-2">
+                <Eye size={20} className="text-[#4F46E5]" /> 4. Live Public Card Preview
+              </h2>
+              <p className="text-xs text-[#64748B] mt-0.5">
+                This is exactly how your project card will appear to recruiters and visitors on your public portfolio.
+              </p>
             </div>
 
-            {/* Summary Cards */}
-            <div className="space-y-4 text-xs">
-              <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0]">
-                <span className="font-bold text-[#4F46E5] uppercase tracking-wider block mb-1">Project Summary</span>
-                <p className="text-base font-bold text-[#0F172A]">{title || 'Untitled Project'}</p>
-                <p className="text-[#64748B] mt-1">{shortDescription}</p>
-                <div className="flex flex-wrap gap-1.5 mt-3">
-                  {tags.map(t => <Badge key={t} label={t} className="bg-white border border-[#C7D2FE] text-[#4F46E5] font-bold text-[10px]" />)}
+            {/* Live Pixel-Perfect Public Project Card Preview */}
+            <div className="max-w-md mx-auto my-4">
+              <div className="bg-white border border-[#E2E8F0] rounded-2xl overflow-hidden flex flex-col shadow-md hover:border-[#CBD5E1] transition-all">
+                {/* Project Thumbnail / Banner */}
+                <div className="w-full h-44 bg-[#EEF2FF] border-b border-[#E2E8F0] overflow-hidden relative">
+                  {imageUrl ? (
+                    <img
+                      src={imageUrl}
+                      alt={title || 'Project Preview'}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-[#4F46E5]/40">
+                      <ImageIcon size={36} />
+                      <span className="text-[11px] font-bold mt-1 text-[#4F46E5]/60">Default Banner</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Card Content */}
+                <div className="p-6 flex flex-col flex-1 gap-3">
+                  {category && (
+                    <span className="text-[11px] font-bold tracking-wider text-[#4F46E5] uppercase">
+                      {category}
+                    </span>
+                  )}
+
+                  <h4 className="text-lg font-bold text-[#0F172A] leading-snug">
+                    {title || 'Untitled Project'}
+                  </h4>
+
+                  <p className="text-xs text-[#64748B] flex-1 line-clamp-3 leading-relaxed">
+                    {shortDescription || 'No description provided.'}
+                  </p>
+
+                  {/* Tags */}
+                  {tags && tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 pt-2 border-t border-[#F1F5F9]">
+                      {tags.slice(0, 3).map((tag) => (
+                        <Badge key={tag} label={tag} className="text-[10px] bg-[#F1F5F9] text-[#334155] px-2.5 py-0.5 rounded-md font-semibold" />
+                      ))}
+                      {tags.length > 3 && (
+                        <span className="text-[10px] text-[#94A3B8] font-semibold self-center">
+                          +{tags.length - 3} more
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
+            </div>
 
-              <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0]">
-                <span className="font-bold text-[#4F46E5] uppercase tracking-wider block mb-1">Narrative Breakdown</span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
-                  <div><span className="text-[#64748B]">Category:</span> <strong className="text-[#0F172A]">{category}</strong></div>
-                  <div><span className="text-[#64748B]">Market:</span> <strong className="text-[#0F172A]">{market}</strong></div>
-                  <div><span className="text-[#64748B]">Process Steps:</span> <strong className="text-[#0F172A]">{processSteps.length} Steps</strong></div>
-                  <div><span className="text-[#64748B]">Metric:</span> <strong className="text-[#0F172A]">{metricValue} - {metricDesc}</strong></div>
-                </div>
+            {/* Case Study Details Breakdown */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-3 border-t border-[#F1F5F9]">
+              <div className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
+                <span className="text-[#64748B] block mb-1">Story Narrative:</span>
+                <strong className="text-[#0F172A]">{processSteps.length} Engineering Steps Included</strong>
+              </div>
+              <div className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
+                <span className="text-[#64748B] block mb-1">Gallery &amp; Screenshots:</span>
+                <strong className="text-[#0F172A]">{screenshots.length} Screenshots Attached</strong>
               </div>
             </div>
 
@@ -609,7 +733,7 @@ function CreateProjectWizard() {
         <div className="max-w-4xl mx-auto flex justify-between items-center">
           <div>
             <Button 
-              type="button"
+              type="button" 
               variant="ghost" 
               onClick={handleBack} 
               disabled={currentStep === 1} 
