@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { 
@@ -24,7 +24,8 @@ import {
   TrendingUp,
   Loader2,
   Plus,
-  Eye
+  Eye,
+  Camera
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -43,9 +44,14 @@ function CreateProjectWizard() {
   const editId = searchParams.get('edit');
   const supabase = createClient();
 
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const screenshotInputRef = useRef<HTMLInputElement>(null);
+
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [uploadingScreenshots, setUploadingScreenshots] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
   // Step 1: Basics
@@ -76,7 +82,6 @@ function CreateProjectWizard() {
     'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80',
     'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&auto=format&fit=crop&q=80'
   ]);
-  const [screenshotInput, setScreenshotInput] = useState('');
   const [liveUrl, setLiveUrl] = useState('');
   const [githubUrl, setGithubUrl] = useState('');
   const [docUrl, setDocUrl] = useState('');
@@ -159,13 +164,85 @@ function CreateProjectWizard() {
     setTags(tags.filter((_, index) => index !== indexToRemove));
   };
 
-  const addScreenshot = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && screenshotInput.trim() && screenshots.length < 6) {
-      e.preventDefault();
-      if (!screenshots.includes(screenshotInput.trim())) {
-        setScreenshots([...screenshots, screenshotInput.trim()]);
+  // ── LOCAL COMPUTER FILE UPLOADS (SUPABASE STORAGE) ──
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingCover(true);
+      setErrorMessage(null);
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `cover_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+      const filePath = `covers/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('projects')
+        .upload(filePath, file, { cacheControl: '3600', upsert: true });
+
+      if (uploadError) {
+        // Fallback to local Data URL preview if bucket policy hasn't been run yet
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          if (event.target?.result) setImageUrl(event.target.result as string);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        const { data: { publicUrl } } = supabase.storage
+          .from('projects')
+          .getPublicUrl(filePath);
+        setImageUrl(publicUrl);
       }
-      setScreenshotInput('');
+    } catch (err: any) {
+      console.error('Cover upload error:', err);
+    } finally {
+      setUploadingCover(false);
+    }
+  };
+
+  const handleScreenshotsUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    try {
+      setUploadingScreenshots(true);
+      const newUrls: string[] = [];
+
+      for (let i = 0; i < files.length; i++) {
+        if (screenshots.length + newUrls.length >= 6) break;
+        const file = files[i];
+        const fileExt = file.name.split('.').pop();
+        const fileName = `screenshot_${Date.now()}_${i}.${fileExt}`;
+        const filePath = `screenshots/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('projects')
+          .upload(filePath, file, { cacheControl: '3600', upsert: true });
+
+        if (uploadError) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            if (event.target?.result) {
+              setScreenshots(prev => [...prev, event.target!.result as string]);
+            }
+          };
+          reader.readAsDataURL(file);
+        } else {
+          const { data: { publicUrl } } = supabase.storage
+            .from('projects')
+            .getPublicUrl(filePath);
+          newUrls.push(publicUrl);
+        }
+      }
+
+      if (newUrls.length > 0) {
+        setScreenshots(prev => [...prev, ...newUrls]);
+      }
+    } catch (err: any) {
+      console.error('Screenshot upload error:', err);
+    } finally {
+      setUploadingScreenshots(false);
     }
   };
 
@@ -406,16 +483,70 @@ function CreateProjectWizard() {
                 </div>
               </div>
 
+              {/* Cover Image Upload (From Local Computer or URL) */}
               <div>
-                <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5">Primary Cover Image URL</label>
+                <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5">
+                  Project Cover Image *
+                </label>
+                
+                {/* Hidden Local File Input */}
                 <input 
-                  type="url" 
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  placeholder="https://images.unsplash.com/photo-1518770660439-4636190af475..." 
-                  className="w-full rounded-xl border border-[#E2E8F0] px-4 py-2.5 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]" 
+                  type="file" 
+                  ref={coverInputRef}
+                  accept="image/png, image/jpeg, image/webp"
+                  onChange={handleCoverUpload}
+                  className="hidden" 
                 />
-                <p className="text-[11px] text-[#64748B] mt-1">This image appears as the main thumbnail on public portfolio grids.</p>
+
+                {imageUrl ? (
+                  <div className="relative rounded-2xl overflow-hidden border border-[#E2E8F0] aspect-video max-h-56 bg-slate-100 group">
+                    <img src={imageUrl} alt="Cover preview" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => coverInputRef.current?.click()}
+                        className="px-3.5 py-1.5 bg-white text-[#0F172A] text-xs font-bold rounded-xl shadow-xs hover:bg-[#F8FAFC]"
+                      >
+                        Change Image
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setImageUrl('')}
+                        className="px-3.5 py-1.5 bg-[#EF4444] text-white text-xs font-bold rounded-xl shadow-xs hover:bg-[#DC2626]"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div 
+                    onClick={() => coverInputRef.current?.click()}
+                    className="flex justify-center rounded-2xl border-2 border-dashed border-[#CBD5E1] bg-[#F8FAFC] px-6 py-8 hover:bg-[#EEF2FF]/40 hover:border-[#4F46E5] transition-all cursor-pointer text-center"
+                  >
+                    <div className="flex flex-col items-center">
+                      {uploadingCover ? (
+                        <Loader2 size={32} className="animate-spin text-[#4F46E5] mb-2" />
+                      ) : (
+                        <Upload className="h-8 w-8 text-[#4F46E5] mb-2" />
+                      )}
+                      <span className="text-xs font-bold text-[#4F46E5]">
+                        {uploadingCover ? 'Uploading Cover...' : 'Click to upload cover from your computer'}
+                      </span>
+                      <p className="text-[11px] text-[#64748B] mt-1">PNG, JPG or WEBP · 16:9 recommended</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Optional Direct URL Input */}
+                <div className="mt-2.5">
+                  <input 
+                    type="url" 
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.target.value)}
+                    placeholder="Or paste an image URL directly..." 
+                    className="w-full rounded-xl border border-[#E2E8F0] px-3 py-1.5 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]" 
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -545,17 +676,36 @@ function CreateProjectWizard() {
           <div className="bg-white rounded-3xl border border-[#E2E8F0] p-6 sm:p-8 shadow-xs space-y-6">
             <div className="border-b border-[#F1F5F9] pb-4">
               <h2 className="text-xl font-bold text-[#0F172A]">3. Screenshots &amp; External Resources</h2>
-              <p className="text-xs text-[#64748B] mt-0.5">Showcase your project in action with screenshots, repository, and live demo links.</p>
+              <p className="text-xs text-[#64748B] mt-0.5">Upload project screenshots directly from your computer or provide repository links.</p>
             </div>
 
             {/* Screenshots Gallery Section */}
             <div className="space-y-3">
-              <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider">
-                Project Screenshots ({screenshots.length}/6)
-              </label>
+              <div className="flex justify-between items-center">
+                <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider">
+                  Project Screenshots ({screenshots.length}/6)
+                </label>
+                <button
+                  type="button"
+                  onClick={() => screenshotInputRef.current?.click()}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#4F46E5] text-white text-xs font-bold rounded-xl hover:bg-[#4338CA] shadow-2xs transition-colors cursor-pointer"
+                >
+                  <Upload size={13} /> Upload from Computer
+                </button>
+              </div>
+
+              {/* Hidden Local Screenshots Input */}
+              <input 
+                type="file" 
+                ref={screenshotInputRef}
+                multiple
+                accept="image/png, image/jpeg, image/webp"
+                onChange={handleScreenshotsUpload}
+                className="hidden" 
+              />
               
               {/* Screenshots Grid Preview */}
-              {screenshots.length > 0 && (
+              {screenshots.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl">
                   {screenshots.map((src, i) => (
                     <div key={i} className="relative group rounded-xl overflow-hidden border border-[#E2E8F0] aspect-video bg-slate-100">
@@ -570,31 +720,19 @@ function CreateProjectWizard() {
                     </div>
                   ))}
                 </div>
+              ) : (
+                <div 
+                  onClick={() => screenshotInputRef.current?.click()}
+                  className="p-8 border-2 border-dashed border-[#CBD5E1] rounded-2xl text-center bg-[#F8FAFC] hover:bg-[#EEF2FF]/40 hover:border-[#4F46E5] transition-all cursor-pointer"
+                >
+                  <Camera size={28} className="mx-auto text-[#4F46E5] mb-2" />
+                  <p className="text-xs font-bold text-[#4F46E5]">
+                    {uploadingScreenshots ? 'Uploading Screenshots...' : 'Click to upload screenshot images'}
+                  </p>
+                  <p className="text-[11px] text-[#64748B] mt-0.5">Add UI previews, terminal outputs, or system diagrams</p>
+                </div>
               )}
 
-              {/* Add Screenshot URL Input */}
-              <div className="flex gap-2">
-                <input 
-                  type="url" 
-                  value={screenshotInput}
-                  onChange={(e) => setScreenshotInput(e.target.value)}
-                  onKeyDown={addScreenshot}
-                  placeholder="Paste screenshot image URL and press Enter (e.g. Unsplash, Cloudinary, Imgur)..." 
-                  className="flex-1 rounded-xl border border-[#E2E8F0] px-4 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]" 
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (screenshotInput.trim() && screenshots.length < 6) {
-                      setScreenshots([...screenshots, screenshotInput.trim()]);
-                      setScreenshotInput('');
-                    }
-                  }}
-                  className="px-4 py-2 bg-[#0F172A] text-white text-xs font-bold rounded-xl hover:bg-[#1E293B] transition-colors"
-                >
-                  Add Image
-                </button>
-              </div>
               <p className="text-[11px] text-[#64748B]">These screenshots will appear in the detailed case study page gallery.</p>
             </div>
 
