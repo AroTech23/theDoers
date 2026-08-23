@@ -33,30 +33,30 @@ function NavbarContent() {
     <nav className="w-full bg-white border-b border-[#E2E8F0] sticky top-0 z-50 h-16">
       <div className="w-full px-6 md:px-8 lg:px-12 h-full flex items-center justify-between">
         {/* Left Side: Logo & Primary Navigation Links */}
-        <div className="flex items-center gap-10 h-full">
-          <Link href="/" className="flex items-center gap-2.5 text-xl font-bold text-[#111827] hover:text-[#4F46E5] transition-colors group">
+        <div className="flex items-center gap-12 lg:gap-14 h-full">
+          <Link href="/" className="flex items-center gap-2.5 text-xl font-bold text-[#0F172A] hover:text-[#4F46E5] transition-colors group">
             <img src="/logo-icon.png" alt="theDoers logo" className="h-8 w-auto object-contain group-hover:scale-105 transition-transform" />
             <span>theDoers</span>
           </Link>
 
-          {/* Desktop Nav with Active Indicator Underlines */}
-          <div className="hidden md:flex items-center gap-8 h-full">
+          {/* Desktop Nav with Interactive Pill/Tab Buttons */}
+          <div className="hidden md:flex items-center gap-2">
             <Link
               href="/doers"
-              className={`h-full flex items-center text-sm transition-colors border-b-2 font-medium ${
+              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-150 cursor-pointer ${
                 isDoersActive
-                  ? 'border-[#111827] text-[#111827] font-bold'
-                  : 'border-transparent text-[#6B7280] hover:text-[#111827]'
+                  ? 'bg-[#EEF2FF] text-[#4F46E5] shadow-2xs font-bold'
+                  : 'text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC]'
               }`}
             >
               Doers
             </Link>
             <Link
               href="/about"
-              className={`h-full flex items-center text-sm transition-colors border-b-2 font-medium ${
+              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-150 cursor-pointer ${
                 isAboutActive
-                  ? 'border-[#111827] text-[#111827] font-bold'
-                  : 'border-transparent text-[#6B7280] hover:text-[#111827]'
+                  ? 'bg-[#EEF2FF] text-[#4F46E5] shadow-2xs font-bold'
+                  : 'text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC]'
               }`}
             >
               About
