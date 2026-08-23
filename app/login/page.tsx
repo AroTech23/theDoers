@@ -22,12 +22,14 @@ export default function LoginPage() {
         if (typeof window !== 'undefined') {
           localStorage.setItem('thedoers_auth_role', 'admin');
           localStorage.setItem('thedoers_user_name', 'Admin');
+          document.cookie = "thedoers_auth_role=admin; path=/; max-age=604800; SameSite=Lax;";
         }
         router.push('/admin');
       } else {
         if (typeof window !== 'undefined') {
           localStorage.setItem('thedoers_auth_role', 'doer');
           localStorage.setItem('thedoers_user_name', 'Alex Chen');
+          document.cookie = "thedoers_auth_role=doer; path=/; max-age=604800; SameSite=Lax;";
         }
         router.push('/dashboard');
       }
