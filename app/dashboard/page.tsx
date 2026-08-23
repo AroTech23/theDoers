@@ -3,9 +3,7 @@
 import Link from 'next/link'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
-import Avatar from '@/components/ui/Avatar'
 import {
-  ExternalLink,
   Copy,
   Check,
   Edit2,
@@ -19,10 +17,11 @@ export default function DashboardPage() {
   const currentDoer = MOCK_DOERS[0]
   const [copied, setCopied] = useState(false)
 
-  const publishedProjects = MOCK_PROJECTS.slice(0, 2).map((p) => ({
+  // 3 Projects per row
+  const publishedProjects = MOCK_PROJECTS.slice(0, 3).map((p, i) => ({
     ...p,
     status: 'Published',
-    market: p.id === 'p1' ? 'Education / EdTech' : 'Smart Home / IoT'
+    market: i === 0 ? 'Education / EdTech' : i === 1 ? 'Smart Home / IoT' : 'Web & Algorithms'
   }))
 
   const portfolioUrl = `thedoers.com/${currentDoer.username || 'alexchen'}`
@@ -154,7 +153,7 @@ export default function DashboardPage() {
 
       </div>
 
-      {/* ── BOTTOM SECTION: RECENT PUBLISHED PROJECTS ── */}
+      {/* ── BOTTOM SECTION: RECENT PUBLISHED PROJECTS (3 PER ROW) ── */}
       <div className="pt-2">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -171,35 +170,35 @@ export default function DashboardPage() {
           </Link>
         </div>
 
-        {/* 2-Column Grid Matching Wireframe Reference */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* 3-Column Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {publishedProjects.map((project) => (
             <div
               key={project.id}
-              className="bg-white border border-[#E5E7EB] rounded-3xl overflow-hidden flex flex-col hover:shadow-md transition-shadow"
+              className="bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden flex flex-col hover:shadow-md transition-shadow"
             >
               {/* Cover Image Area */}
-              <div className="w-full h-52 bg-[#EEF2FF] flex items-center justify-center border-b border-[#E5E7EB] relative">
+              <div className="w-full h-44 bg-[#EEF2FF] flex items-center justify-center border-b border-[#E5E7EB] relative">
                 <div className="text-[#4F46E5]/30">
-                  <ImageIcon size={44} />
+                  <ImageIcon size={36} />
                 </div>
                 {/* Published Status Pill */}
-                <div className="absolute top-4 right-4">
-                  <span className="px-3 py-1 bg-white/95 backdrop-blur-sm rounded-full flex items-center gap-1.5 text-xs font-bold text-[#059669] shadow-2xs border border-[#E5E7EB]">
-                    <span className="w-2 h-2 rounded-full bg-[#10B981]"></span>
+                <div className="absolute top-3 right-3">
+                  <span className="px-2.5 py-0.5 bg-white/95 backdrop-blur-sm rounded-full flex items-center gap-1.5 text-[10px] font-bold text-[#059669] shadow-2xs border border-[#E5E7EB]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]"></span>
                     Published
                   </span>
                 </div>
               </div>
 
               {/* Card Body */}
-              <div className="p-7 flex-1 flex flex-col gap-3">
-                <span className="text-[11px] font-bold text-[#4F46E5] uppercase tracking-wider">
+              <div className="p-5 flex-1 flex flex-col gap-2.5">
+                <span className="text-[10px] font-bold text-[#4F46E5] uppercase tracking-wider">
                   {project.category}
                 </span>
 
                 <Link href={`/projects/${project.id}?from=dashboard`}>
-                  <h3 className="text-lg font-bold text-[#111827] hover:text-[#4F46E5] transition-colors leading-snug">
+                  <h3 className="text-base font-bold text-[#111827] hover:text-[#4F46E5] transition-colors leading-snug">
                     {project.title}
                   </h3>
                 </Link>
@@ -209,18 +208,32 @@ export default function DashboardPage() {
                 </p>
 
                 {/* Tags */}
-                <div className="flex flex-wrap gap-2 pt-2">
+                <div className="flex flex-wrap gap-1.5 pt-1">
                   <Badge
                     label={project.market}
-                    className="bg-[#F3F4F6] text-[#374151] text-xs font-medium px-3 py-1 rounded-lg"
+                    className="bg-[#F3F4F6] text-[#374151] text-[10px] font-medium px-2.5 py-0.5 rounded-md"
                   />
                   {project.tags?.slice(0, 2).map((tag: string) => (
                     <Badge
                       key={tag}
                       label={tag}
-                      className="bg-[#F3F4F6] text-[#374151] text-xs font-medium px-3 py-1 rounded-lg"
+                      className="bg-[#F3F4F6] text-[#374151] text-[10px] font-medium px-2.5 py-0.5 rounded-md"
                     />
                   ))}
+                </div>
+
+                {/* Bottom Action Buttons: View & Edit */}
+                <div className="mt-auto pt-3.5 border-t border-[#F3F4F6] flex items-center gap-2">
+                  <Link href={`/projects/${project.id}?from=dashboard`} className="flex-1">
+                    <Button variant="outline" size="sm" className="w-full text-xs font-semibold py-1.5 justify-center">
+                      View
+                    </Button>
+                  </Link>
+                  <Link href={`/dashboard/projects/new?edit=${project.id}`} className="flex-1">
+                    <Button variant="outline" size="sm" className="w-full text-xs font-semibold py-1.5 justify-center text-[#4F46E5] hover:bg-[#EEF2FF]">
+                      Edit
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </div>
