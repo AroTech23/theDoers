@@ -67,9 +67,9 @@ export default function HomePage() {
           {/* Left: Copy & Role-Aware CTAs */}
           <div className="flex flex-col gap-6">
             <div>
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EEF2FF] border border-[#C7D2FE] text-xs font-extrabold uppercase tracking-wider text-[#4F46E5] shadow-2xs mb-4">
-                ✨ Proof of Work Over Paper Resumes
-              </div>
+              <p className="text-xs sm:text-sm font-bold uppercase tracking-widest text-[#4F46E5] mb-3">
+                Proof of Work Over Paper Resumes
+              </p>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[#0F172A] tracking-tight leading-tight">
                 See What Students Are <span className="text-[#4F46E5]">Building.</span>
               </h1>
