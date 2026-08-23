@@ -1,12 +1,23 @@
 import React from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ExternalLink, Code2, FileText, TrendingUp } from 'lucide-react';
+import { 
+  ArrowLeft, 
+  ExternalLink, 
+  Code2, 
+  FileText, 
+  TrendingUp, 
+  Layers, 
+  CheckCircle2, 
+  AlertCircle, 
+  Target, 
+  Sparkles,
+  Image as ImageIcon 
+} from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Avatar from '@/components/ui/Avatar';
 import Badge from '@/components/ui/Badge';
 import ProjectCard from '@/components/projects/ProjectCard';
 import { MOCK_PROJECTS, MOCK_DOERS } from '@/lib/mockData';
-import { MOCK_ADMIN_PROJECTS } from '@/lib/adminData';
 
 export default async function ProjectDetailsPage({ 
   params,
@@ -18,245 +29,334 @@ export default async function ProjectDetailsPage({
   const resolvedParams = await params;
   const resolvedSearchParams = await searchParams;
   const id = resolvedParams.id;
-  const from = resolvedSearchParams.from;
+  const from = resolvedSearchParams?.from;
 
-  // In a real app, fetch the project by ID. Here we use mock data.
+  // Fetch project & author from mockData
   const project = MOCK_PROJECTS.find(p => p.id === id) || MOCK_PROJECTS[0];
   const doer = MOCK_DOERS.find(d => d.id === project.doer_id) || MOCK_DOERS[0];
   const moreProjects = MOCK_PROJECTS.filter(p => p.id !== project.id).slice(0, 3);
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] pt-24 pb-24">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#F8FAFC] pb-24 pt-6">
+      <div className="max-w-[1440px] mx-auto px-6 md:px-8 lg:px-12">
         
-        {/* Back Link */}
-        <div className="mb-8">
+        {/* ── 1. CONTEXTUAL BACK NAVIGATION ── */}
+        <div className="mb-6">
           {from === 'dashboard' ? (
-            <Link href="/dashboard/projects" className="inline-flex items-center text-sm font-medium text-[#6B7280] hover:text-[#111827]">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to My Dashboard Projects
+            <Link 
+              href="/dashboard/projects" 
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#64748B] hover:text-[#0F172A] transition-colors bg-white border border-[#E2E8F0] px-3.5 py-1.5 rounded-xl shadow-2xs"
+            >
+              <ArrowLeft size={14} /> Back to My Dashboard Projects
             </Link>
           ) : (
-            <Link href={`/doers/${doer.username || doer.id}`} className="inline-flex items-center text-sm font-medium text-[#6B7280] hover:text-[#111827]">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to {doer.full_name}&apos;s Profile
+            <Link 
+              href={`/doers/${doer.username || doer.id}`} 
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#4F46E5] hover:text-[#3730A3] transition-colors bg-[#EEF2FF] px-3.5 py-1.5 rounded-xl shadow-2xs"
+            >
+              <ArrowLeft size={14} /> Back to {doer.full_name}&apos;s Profile
             </Link>
           )}
         </div>
 
-        {/* Header Section */}
-        <div className="mb-12">
-          <div className="flex flex-wrap gap-2 mb-4">
-            <Badge label={project.category} className="text-[#4F46E5] bg-[#EEF2FF] text-xs font-bold uppercase tracking-wider" />
-            <Badge label="EDUCATION / EDTECH" className="text-[#6B7280] bg-white border border-[#E5E7EB] text-xs font-bold uppercase tracking-wider" />
+        {/* ── 2. PROJECT HEADER (Title, Category, Description, Author Meta) ── */}
+        <div className="bg-white border border-[#E2E8F0] rounded-3xl p-8 lg:p-10 shadow-xs mb-10">
+          <div className="flex flex-wrap items-center gap-2.5 mb-4">
+            <Badge 
+              label={project.category} 
+              className="text-[#4F46E5] bg-[#EEF2FF] text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-lg" 
+            />
+            {project.market && (
+              <Badge 
+                label={project.market} 
+                className="text-[#334155] bg-[#F1F5F9] border border-[#E2E8F0] text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-lg" 
+              />
+            )}
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-[#111827] mb-4">{project.title}</h1>
-          <p className="text-xl text-[#6B7280] max-w-3xl mb-8">{project.description}</p>
+
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0F172A] tracking-tight mb-4 leading-tight">
+            {project.title}
+          </h1>
+
+          <p className="text-base sm:text-lg text-[#64748B] max-w-4xl leading-relaxed mb-8">
+            {project.description}
+          </p>
           
-          <div className="flex flex-wrap items-center gap-6 pb-8 border-b border-[#E5E7EB]">
-            <div className="flex items-center">
-              <Avatar name={doer.full_name} imageUrl={doer.avatar_url} size="md" className="mr-4" />
+          <div className="flex flex-wrap items-center justify-between gap-6 pt-6 border-t border-[#F1F5F9]">
+            {/* Author */}
+            <div className="flex items-center gap-4">
+              <Link href={`/doers/${doer.username || doer.id}`} className="hover:opacity-85 transition-opacity">
+                <Avatar name={doer.full_name} imageUrl={doer.avatar_url} size="md" className="w-12 h-12 shadow-2xs" />
+              </Link>
               <div>
-                <p className="text-sm text-[#6B7280]">Built by</p>
-                <p className="font-bold text-[#111827]">{doer.full_name}</p>
+                <p className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider">Built by</p>
+                <Link href={`/doers/${doer.username || doer.id}`} className="font-bold text-[#0F172A] hover:text-[#4F46E5] transition-colors text-base">
+                  {doer.full_name}
+                </Link>
+                <p className="text-xs text-[#64748B] mt-0.5">{doer.program} · {doer.year}</p>
               </div>
             </div>
-            <div className="hidden sm:block h-10 w-px bg-[#E5E7EB]"></div>
-            <div>
-              <p className="text-sm font-medium text-[#111827]">Computer Science, Year 3</p>
-            </div>
-            <div className="flex-1"></div>
-            <div className="flex gap-3 w-full sm:w-auto">
-              <Button className="bg-[#111827] hover:bg-gray-800 text-white flex-1 sm:flex-none">
-                <ExternalLink className="w-4 h-4 mr-2" />
-                View Live Demo
-              </Button>
-              <Button variant="outline" className="border-[#E5E7EB] text-[#111827] flex-1 sm:flex-none">
-                <Code2 className="w-4 h-4 mr-2" />
-                View GitHub
-              </Button>
+
+            {/* Quick CTAs */}
+            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+              {project.live_url && (
+                <a href={project.live_url} target="_blank" rel="noreferrer" className="flex-1 sm:flex-none">
+                  <Button variant="primary" size="md" className="w-full gap-2 font-bold shadow-xs">
+                    <ExternalLink size={15} /> View Live Demo
+                  </Button>
+                </a>
+              )}
+              {project.github_url && (
+                <a href={project.github_url} target="_blank" rel="noreferrer" className="flex-1 sm:flex-none">
+                  <Button variant="outline" size="md" className="w-full gap-2 font-bold">
+                    <Code2 size={15} /> View GitHub
+                  </Button>
+                </a>
+              )}
             </div>
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-12">
-          {/* Main Content Column */}
-          <div className="lg:w-2/3">
-            <div className="aspect-video bg-[#111827] rounded-2xl mb-12 flex items-center justify-center text-white overflow-hidden relative">
-               {/* Architecture diagram banner placeholder */}
-               <div className="absolute inset-0 bg-gradient-to-tr from-[#3730A3] to-[#4F46E5] opacity-20"></div>
-               <div className="relative z-10 flex flex-col items-center">
-                 <div className="w-16 h-16 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-sm mb-4">
-                   <div className="w-8 h-8 text-white">⬡</div>
-                 </div>
-                 <p className="font-bold tracking-widest text-white/50 uppercase text-sm">System Architecture</p>
-               </div>
+        {/* ── 3. MAIN CASE STUDY CONTENT + SIDEBAR ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+          
+          {/* Main Case Study Column (8 Cols) */}
+          <div className="lg:col-span-8 space-y-10">
+            
+            {/* Visual Cover / System Architecture Banner */}
+            <div className="aspect-video bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#312E81] rounded-3xl p-8 flex flex-col justify-between text-white relative overflow-hidden shadow-sm border border-[#E2E8F0]">
+              <div className="absolute inset-0 bg-[radial-gradient(#4F46E5_1px,transparent_1px)] [background-size:16px_16px] opacity-25"></div>
+              
+              <div className="relative z-10 flex items-center justify-between">
+                <span className="px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-xs font-bold text-white uppercase tracking-wider">
+                  Technical Architecture
+                </span>
+                <span className="text-xs text-white/60 font-mono">theDoers Verified</span>
+              </div>
+
+              <div className="relative z-10 text-center py-6">
+                <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center mx-auto mb-3 text-white border border-white/20">
+                  <Layers size={28} />
+                </div>
+                <h3 className="text-xl font-bold tracking-tight text-white">{project.title}</h3>
+                <p className="text-xs text-white/70 mt-1">{project.category}</p>
+              </div>
+
+              <div className="relative z-10 flex items-center justify-between text-[11px] text-white/60 pt-4 border-t border-white/10">
+                <span>Production Architecture</span>
+                <span>{project.tags.slice(0, 3).join(' • ')}</span>
+              </div>
             </div>
 
-            <section className="mb-12">
-              <h2 className="text-2xl font-bold text-[#111827] mb-4">The Problem</h2>
-              <div className="prose prose-lg text-[#4B5563] max-w-none">
-                <p>
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                </p>
-              </div>
-            </section>
+            {/* 1. The Problem */}
+            {project.problem && (
+              <section className="bg-white border border-[#E2E8F0] rounded-3xl p-8 shadow-xs">
+                <div className="flex items-center gap-2.5 mb-4 text-[#EF4444]">
+                  <AlertCircle size={22} />
+                  <h2 className="text-2xl font-extrabold text-[#0F172A] tracking-tight">The Problem</h2>
+                </div>
+                <div className="text-sm sm:text-base text-[#334155] leading-relaxed">
+                  <p>{project.problem}</p>
+                </div>
 
-            <section className="mb-12">
-              <h2 className="text-2xl font-bold text-[#111827] mb-4">Current State</h2>
-              <div className="prose prose-lg text-[#4B5563] max-w-none">
-                <p>
-                  Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-                </p>
-              </div>
-            </section>
+                {project.current_state && (
+                  <div className="mt-6 p-5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#64748B] mb-1.5">
+                      Current State &amp; Inefficiencies
+                    </h4>
+                    <p className="text-xs sm:text-sm text-[#475569] leading-relaxed">
+                      {project.current_state}
+                    </p>
+                  </div>
+                )}
+              </section>
+            )}
 
-            <section className="mb-12">
-              <h2 className="text-2xl font-bold text-[#111827] mb-6">Process</h2>
-              <div className="space-y-6">
-                {[1, 2, 3].map((step) => (
-                  <div key={step} className="flex gap-4">
-                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[#EEF2FF] text-[#4F46E5] font-bold flex items-center justify-center mt-1">
-                      {step}
+            {/* 2. Process / Engineering Steps */}
+            {project.process && project.process.length > 0 && (
+              <section className="bg-white border border-[#E2E8F0] rounded-3xl p-8 shadow-xs">
+                <div className="flex items-center gap-2.5 mb-6 text-[#4F46E5]">
+                  <Layers size={22} />
+                  <h2 className="text-2xl font-extrabold text-[#0F172A] tracking-tight">Engineering Process</h2>
+                </div>
+                
+                <div className="space-y-6">
+                  {project.process.map((step) => (
+                    <div key={step.step} className="flex gap-4 items-start p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0]">
+                      <div className="flex-shrink-0 w-8 h-8 rounded-xl bg-[#EEF2FF] text-[#4F46E5] font-extrabold text-sm flex items-center justify-center border border-[#C7D2FE]">
+                        {step.step}
+                      </div>
+                      <div>
+                        <h3 className="text-sm sm:text-base font-bold text-[#0F172A] mb-1">
+                          {step.title}
+                        </h3>
+                        <p className="text-xs sm:text-sm text-[#475569] leading-relaxed">
+                          {step.description}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* 3. The Solution */}
+            {project.solution && (
+              <section className="bg-white border border-[#E2E8F0] rounded-3xl p-8 shadow-xs">
+                <div className="flex items-center gap-2.5 mb-4 text-[#10B981]">
+                  <CheckCircle2 size={22} />
+                  <h2 className="text-2xl font-extrabold text-[#0F172A] tracking-tight">The Solution</h2>
+                </div>
+                <div className="text-sm sm:text-base text-[#334155] leading-relaxed mb-6">
+                  <p>{project.solution}</p>
+                </div>
+
+                {project.desired_state && (
+                  <div className="p-5 bg-[#ECFDF5] border border-[#A7F3D0] rounded-2xl mb-6">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#059669] mb-1.5">
+                      Target Outcome Achieved
+                    </h4>
+                    <p className="text-xs sm:text-sm text-[#065F46] leading-relaxed">
+                      {project.desired_state}
+                    </p>
+                  </div>
+                )}
+
+                {/* Solution Preview Frame */}
+                <div className="w-full h-64 bg-[#EEF2FF] rounded-2xl border border-[#E0E7FF] flex flex-col items-center justify-center text-[#4F46E5]/40 gap-2">
+                  <ImageIcon size={48} />
+                  <span className="text-xs font-bold tracking-wider uppercase text-[#4F46E5]">Solution Interactive Showcase</span>
+                </div>
+              </section>
+            )}
+
+            {/* 4. Results & Key Impact Metric */}
+            {project.result && (
+              <section className="bg-white border border-[#E2E8F0] rounded-3xl p-8 shadow-xs">
+                <div className="flex items-center gap-2.5 mb-4 text-[#4F46E5]">
+                  <Sparkles size={22} />
+                  <h2 className="text-2xl font-extrabold text-[#0F172A] tracking-tight">The Result &amp; Impact</h2>
+                </div>
+                <div className="text-sm sm:text-base text-[#334155] leading-relaxed mb-6">
+                  <p>{project.result}</p>
+                </div>
+
+                {project.key_metric && (
+                  <div className="bg-gradient-to-r from-[#EEF2FF] to-[#F5F3FF] border border-[#C7D2FE] rounded-2xl p-6 flex items-center gap-6">
+                    <div className="flex-shrink-0 w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-xs border border-[#E0E7FF] text-[#4F46E5]">
+                      <TrendingUp size={28} />
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-[#111827] mb-2">Step {step} Title</h3>
-                      <p className="text-[#4B5563]">Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam.</p>
+                      <div className="text-3xl font-extrabold text-[#4F46E5] tracking-tight">
+                        {project.key_metric.value}
+                      </div>
+                      <div className="text-xs sm:text-sm font-bold text-[#3730A3] mt-0.5">
+                        {project.key_metric.description}
+                      </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            </section>
+                )}
+              </section>
+            )}
 
-            <section className="mb-12">
-              <h2 className="text-2xl font-bold text-[#111827] mb-4">Desired State</h2>
-              <div className="prose prose-lg text-[#4B5563] max-w-none">
-                <p>
-                  Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.
-                </p>
-              </div>
-            </section>
+          </div>
 
-            <section className="mb-12">
-              <h2 className="text-2xl font-bold text-[#111827] mb-4">The Solution</h2>
-              <div className="prose prose-lg text-[#4B5563] max-w-none mb-6">
-                <p>
-                  Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem.
-                </p>
+          {/* Right Sidebar Column (4 Cols) */}
+          <div className="lg:col-span-4 space-y-6 sticky top-24">
+            
+            {/* Project Specs Card */}
+            <div className="bg-white rounded-3xl border border-[#E2E8F0] p-6 shadow-xs space-y-6">
+              <div>
+                <h3 className="text-xs font-bold text-[#64748B] uppercase tracking-wider mb-1.5">Category</h3>
+                <p className="font-bold text-sm text-[#0F172A]">{project.category}</p>
               </div>
-              <div className="aspect-video bg-[#E5E7EB] rounded-2xl flex items-center justify-center text-[#9CA3AF]">
-                App Screenshot Placeholder
-              </div>
-            </section>
 
-            <section className="mb-12">
-              <h2 className="text-2xl font-bold text-[#111827] mb-6">Project Screenshots</h2>
-              <div className="grid grid-cols-2 gap-4">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="aspect-[4/3] bg-[#E5E7EB] rounded-xl flex items-center justify-center text-[#9CA3AF]">
-                    Screenshot {i}
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section className="mb-12">
-              <h2 className="text-2xl font-bold text-[#111827] mb-4">The Result</h2>
-              <div className="prose prose-lg text-[#4B5563] max-w-none mb-8">
-                <p>
-                  Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur?
-                </p>
-              </div>
-              <div className="bg-[#EEF2FF] border border-[#C7D2FE] rounded-2xl p-8 flex items-center gap-6">
-                <div className="flex-shrink-0 w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm">
-                  <TrendingUp className="w-8 h-8 text-[#4F46E5]" />
-                </div>
+              {project.market && (
                 <div>
-                  <div className="text-4xl font-bold text-[#4F46E5] mb-1">40%</div>
-                  <div className="text-lg font-medium text-[#3730A3]">Reduction in processing time</div>
+                  <h3 className="text-xs font-bold text-[#64748B] uppercase tracking-wider mb-1.5">Market / Space</h3>
+                  <p className="font-bold text-sm text-[#0F172A]">{project.market}</p>
                 </div>
-              </div>
-            </section>
-          </div>
+              )}
 
-          {/* Right Sidebar Column */}
-          <div className="lg:w-1/3">
-            <div className="sticky top-24 space-y-8">
-              
-              <div className="bg-white rounded-2xl border border-[#E5E7EB] p-6">
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-2">Category</h3>
-                    <p className="font-medium text-[#111827]">{project.category}</p>
-                  </div>
-                  <div>
-                    <h3 className="text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-2">Market</h3>
-                    <p className="font-medium text-[#111827]">Education / EdTech</p>
-                  </div>
-                  <div>
-                    <h3 className="text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-3">Technologies &amp; Skills</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {project.tags?.map((tag) => (
-                        <span key={tag} className="px-3 py-1 bg-[#F3F4F6] text-[#4B5563] text-sm font-medium rounded-lg">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-3">Project Resources</h3>
-                    <div className="space-y-3">
-                      <a href="#" className="flex items-center text-[#4F46E5] hover:text-[#3730A3] font-medium group">
-                        <div className="w-8 h-8 rounded-lg bg-[#EEF2FF] group-hover:bg-[#E0E7FF] flex items-center justify-center mr-3 transition-colors">
-                          <ExternalLink className="w-4 h-4" />
-                        </div>
-                        Live Demo
-                      </a>
-                      <a href="#" className="flex items-center text-[#4F46E5] hover:text-[#3730A3] font-medium group">
-                        <div className="w-8 h-8 rounded-lg bg-[#EEF2FF] group-hover:bg-[#E0E7FF] flex items-center justify-center mr-3 transition-colors">
-                          <Code2 className="w-4 h-4" />
-                        </div>
-                        GitHub Repository
-                      </a>
-                      <a href="#" className="flex items-center text-[#4F46E5] hover:text-[#3730A3] font-medium group">
-                        <div className="w-8 h-8 rounded-lg bg-[#EEF2FF] group-hover:bg-[#E0E7FF] flex items-center justify-center mr-3 transition-colors">
-                          <FileText className="w-4 h-4" />
-                        </div>
-                        Documentation
-                      </a>
-                    </div>
-                  </div>
+              <div>
+                <h3 className="text-xs font-bold text-[#64748B] uppercase tracking-wider mb-2.5">Technologies &amp; Stack</h3>
+                <div className="flex flex-wrap gap-1.5">
+                  {project.tags.map((tag) => (
+                    <Badge 
+                      key={tag} 
+                      label={tag} 
+                      className="bg-[#F1F5F9] text-[#334155] text-xs font-medium px-2.5 py-1 rounded-lg border border-[#E2E8F0]" 
+                    />
+                  ))}
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl border border-[#E5E7EB] p-6 text-center">
-                <h3 className="text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-6 text-left">About the Student</h3>
-                <Avatar name={doer.full_name} imageUrl={doer.avatar_url} size="lg" className="w-24 h-24 mx-auto mb-4" />
-                <h4 className="text-xl font-bold text-[#111827] mb-1">{doer.full_name}</h4>
-                <p className="text-sm font-medium text-[#4F46E5] mb-4">{doer.program} · {doer.year}</p>
-                <p className="text-sm text-[#6B7280] mb-6">
-                  {doer.bio}
-                </p>
-                <Link href={`/doers/${doer.username || doer.id}`}>
-                  <Button variant="outline" className="w-full border-[#E5E7EB] text-[#111827]">
-                    View Full Portfolio
-                  </Button>
-                </Link>
-              </div>
-
+              {/* Project Links */}
+              {(project.live_url || project.github_url || project.doc_url) && (
+                <div>
+                  <h3 className="text-xs font-bold text-[#64748B] uppercase tracking-wider mb-3">Project Resources</h3>
+                  <div className="space-y-2">
+                    {project.live_url && (
+                      <a href={project.live_url} target="_blank" rel="noreferrer" className="flex items-center text-xs font-bold text-[#4F46E5] hover:text-[#3730A3] p-2 rounded-xl hover:bg-[#EEF2FF] transition-colors group">
+                        <ExternalLink size={14} className="mr-2.5 text-[#4F46E5]" /> Live Demo
+                      </a>
+                    )}
+                    {project.github_url && (
+                      <a href={project.github_url} target="_blank" rel="noreferrer" className="flex items-center text-xs font-bold text-[#4F46E5] hover:text-[#3730A3] p-2 rounded-xl hover:bg-[#EEF2FF] transition-colors group">
+                        <Code2 size={14} className="mr-2.5 text-[#4F46E5]" /> GitHub Repository
+                      </a>
+                    )}
+                    {project.doc_url && (
+                      <a href={project.doc_url} target="_blank" rel="noreferrer" className="flex items-center text-xs font-bold text-[#4F46E5] hover:text-[#3730A3] p-2 rounded-xl hover:bg-[#EEF2FF] transition-colors group">
+                        <FileText size={14} className="mr-2.5 text-[#4F46E5]" /> Project Documentation
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
+
+            {/* About Student Card */}
+            <div className="bg-white rounded-3xl border border-[#E2E8F0] p-6 shadow-xs text-center flex flex-col items-center">
+              <Avatar name={doer.full_name} imageUrl={doer.avatar_url} size="lg" className="w-20 h-20 shadow-xs mb-3" />
+              <h4 className="text-lg font-bold text-[#0F172A]">{doer.full_name}</h4>
+              <p className="text-xs font-bold text-[#4F46E5] mt-0.5">{doer.program} · {doer.year}</p>
+              
+              <p className="text-xs text-[#64748B] my-4 line-clamp-3 leading-relaxed">
+                {doer.bio}
+              </p>
+              
+              <Link href={`/doers/${doer.username || doer.id}`} className="w-full">
+                <Button variant="outline" size="sm" className="w-full font-bold text-xs py-2">
+                  View Full Portfolio ↗
+                </Button>
+              </Link>
+            </div>
+
           </div>
+
         </div>
 
-        {/* More Projects Section */}
-        <div className="mt-20 pt-16 border-t border-[#E5E7EB]">
-          <h2 className="text-2xl font-bold text-[#111827] mb-8">More from {doer.full_name}</h2>
+        {/* ── 4. MORE PROJECTS FROM THE SAME DOER (3-Column Grid) ── */}
+        <div className="mt-20 pt-12 border-t border-[#E2E8F0]">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h2 className="text-2xl font-extrabold text-[#0F172A] tracking-tight">
+                More from {doer.full_name}
+              </h2>
+              <p className="text-xs text-[#64748B] mt-0.5">Explore additional engineering case studies by this student.</p>
+            </div>
+            <Link 
+              href={`/doers/${doer.username || doer.id}`}
+              className="text-xs font-bold text-[#4F46E5] hover:underline"
+            >
+              View all ({MOCK_PROJECTS.length}) →
+            </Link>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {moreProjects.map((p) => (
-              <ProjectCard
-                key={p.id}
-                project={p}
-              />
+              <ProjectCard key={p.id} project={p} />
             ))}
           </div>
         </div>

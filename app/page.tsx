@@ -86,26 +86,33 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Right: Floating cards preview */}
+          {/* Right: Floating cards preview with clickable links */}
           <div className="hidden md:flex flex-col gap-4 items-end">
-            <div className="bg-white border border-[#E2E8F0] rounded-2xl p-5 shadow-xs w-72 hover:shadow-md transition-shadow">
-              <div className="w-full h-32 bg-[#EEF2FF] rounded-xl mb-3 flex items-center justify-center text-[#4F46E5]/40 font-bold text-xs">
+            <Link 
+              href="/doers/marcusvance"
+              className="bg-white border border-[#E2E8F0] rounded-2xl p-5 shadow-xs w-72 hover:shadow-md hover:border-[#CBD5E1] transition-all group"
+            >
+              <div className="w-full h-32 bg-[#EEF2FF] rounded-xl mb-3 flex items-center justify-center text-[#4F46E5]/40 font-bold text-xs group-hover:bg-[#E0E7FF] transition-colors">
                 AI / Machine Learning
               </div>
-              <p className="font-bold text-[#0F172A] text-sm">Marcus Vance</p>
+              <p className="font-bold text-[#0F172A] text-sm group-hover:text-[#4F46E5] transition-colors">Marcus Vance</p>
               <div className="flex items-center gap-2 mt-1.5">
                 <div className="w-6 h-6 rounded-full bg-[#4F46E5] flex items-center justify-center text-white text-xs font-bold">MV</div>
                 <span className="text-xs text-[#64748B]">B.S. Computer Science</span>
               </div>
-            </div>
-            <div className="bg-white border border-[#E2E8F0] rounded-2xl p-5 shadow-xs w-64 self-start ml-8 hover:shadow-md transition-shadow">
-              <p className="font-bold text-[#0F172A] text-sm leading-snug">EcoTrack: Carbon Analyzer</p>
-              <Badge label="React" className="mt-2 bg-[#F1F5F9] text-[#334155]" />
+            </Link>
+
+            <Link 
+              href="/projects/p1"
+              className="bg-white border border-[#E2E8F0] rounded-2xl p-5 shadow-xs w-64 self-start ml-8 hover:shadow-md hover:border-[#CBD5E1] transition-all group"
+            >
+              <p className="font-bold text-[#0F172A] text-sm leading-snug group-hover:text-[#4F46E5] transition-colors">AI-Powered Study Assistant</p>
+              <Badge label="Python / NLP" className="mt-2 bg-[#F1F5F9] text-[#334155]" />
               <div className="flex items-center gap-2 mt-3">
-                <div className="w-6 h-6 rounded-full bg-[#4F46E5] flex items-center justify-center text-white text-xs font-bold">JD</div>
-                <span className="text-xs text-[#64748B]">Jane Doe</span>
+                <div className="w-6 h-6 rounded-full bg-[#4F46E5] flex items-center justify-center text-white text-xs font-bold">AC</div>
+                <span className="text-xs text-[#64748B]">Alex Chen</span>
               </div>
-            </div>
+            </Link>
           </div>
         </div>
       </section>
