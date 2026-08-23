@@ -95,7 +95,7 @@ export default function LoginPage() {
                   <input
                     type="email"
                     required
-                    placeholder="alex@example.com or admin@thedoers.com"
+                    placeholder="Enter your email address"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full px-4 py-2.5 text-xs border border-[#E2E8F0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5] text-[#0F172A]"
@@ -143,13 +143,6 @@ export default function LoginPage() {
                   </Button>
                 </div>
               </form>
-
-              {/* Demo Credentials Helper Pill */}
-              <div className="mt-5 p-3 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] text-[11px] text-[#64748B] flex items-center justify-between">
-                <span>Try admin: <strong className="text-[#4F46E5]">admin@thedoers.com</strong></span>
-                <span className="text-[#94A3B8]">•</span>
-                <span>Doer: <strong className="text-[#0F172A]">alex@example.com</strong></span>
-              </div>
 
               <div className="mt-6 pt-5 border-t border-[#F1F5F9] text-center">
                 <p className="text-xs text-[#64748B]">
