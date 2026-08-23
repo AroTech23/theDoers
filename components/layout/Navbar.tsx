@@ -26,22 +26,39 @@ function NavbarContent() {
   // Check if the visitor came from their dashboard workspace
   const fromDashboard = searchParams?.get('from') === 'dashboard'
 
+  const isDoersActive = pathname === '/doers' || pathname?.startsWith('/doers/')
+  const isAboutActive = pathname === '/about'
+
   return (
-    <nav className="w-full bg-white border-b border-[#E5E7EB] sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+    <nav className="w-full bg-white border-b border-[#E5E7EB] sticky top-0 z-50 h-16">
+      <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
         {/* Left Side: Logo & Primary Navigation Links */}
-        <div className="flex items-center gap-10">
+        <div className="flex items-center gap-10 h-full">
           <Link href="/" className="flex items-center gap-2.5 text-xl font-bold text-[#111827] hover:text-[#4F46E5] transition-colors group">
             <img src="/logo-icon.png" alt="theDoers logo" className="h-8 w-auto object-contain group-hover:scale-105 transition-transform" />
             <span>theDoers</span>
           </Link>
 
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-6">
-            <Link href="/doers" className="text-sm text-[#6B7280] hover:text-[#111827] font-medium transition-colors">
+          {/* Desktop Nav with Active Indicator Underlines */}
+          <div className="hidden md:flex items-center gap-8 h-full">
+            <Link
+              href="/doers"
+              className={`h-full flex items-center text-sm transition-colors border-b-2 font-medium ${
+                isDoersActive
+                  ? 'border-[#111827] text-[#111827] font-bold'
+                  : 'border-transparent text-[#6B7280] hover:text-[#111827]'
+              }`}
+            >
               Doers
             </Link>
-            <Link href="/about" className="text-sm text-[#6B7280] hover:text-[#111827] font-medium transition-colors">
+            <Link
+              href="/about"
+              className={`h-full flex items-center text-sm transition-colors border-b-2 font-medium ${
+                isAboutActive
+                  ? 'border-[#111827] text-[#111827] font-bold'
+                  : 'border-transparent text-[#6B7280] hover:text-[#111827]'
+              }`}
+            >
               About
             </Link>
           </div>
@@ -93,14 +110,14 @@ function NavbarContent() {
         <div className="md:hidden border-t border-[#E5E7EB] bg-white px-6 py-4 flex flex-col gap-4">
           <Link
             href="/doers"
-            className="text-sm text-[#6B7280] hover:text-[#111827] font-medium"
+            className={`text-sm font-medium ${isDoersActive ? 'text-[#4F46E5] font-bold' : 'text-[#6B7280]'}`}
             onClick={() => setMenuOpen(false)}
           >
             Doers
           </Link>
           <Link
             href="/about"
-            className="text-sm text-[#6B7280] hover:text-[#111827] font-medium"
+            className={`text-sm font-medium ${isAboutActive ? 'text-[#4F46E5] font-bold' : 'text-[#6B7280]'}`}
             onClick={() => setMenuOpen(false)}
           >
             About

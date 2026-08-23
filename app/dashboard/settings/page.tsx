@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import Link from 'next/link';
+import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import Button from '@/components/ui/Button';
 
 export default function SettingsPage() {
@@ -12,6 +13,17 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-[#F9FAFB] pb-24 pt-8">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Previous / Back Navigation */}
+        <div className="mb-4">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#6B7280] hover:text-[#111827] transition-colors"
+          >
+            <ArrowLeft size={14} /> Back to Dashboard
+          </Link>
+        </div>
+
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-[#111827]">Account Settings</h1>
           <p className="text-[#6B7280] mt-1">Manage your account information and security.</p>

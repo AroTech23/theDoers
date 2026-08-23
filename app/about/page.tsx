@@ -1,10 +1,21 @@
 import Link from 'next/link'
 import Button from '@/components/ui/Button'
-import { Target, Users, Sparkles, CheckCircle2 } from 'lucide-react'
+import { Target, Users, Sparkles, ArrowLeft } from 'lucide-react'
 
 export default function AboutPage() {
   return (
-    <div className="max-w-4xl mx-auto px-6 py-16 flex flex-col gap-12">
+    <div className="max-w-4xl mx-auto px-6 py-10 flex flex-col gap-10">
+      
+      {/* Previous / Back Navigation */}
+      <div>
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-xs font-bold text-[#6B7280] hover:text-[#111827] transition-colors"
+        >
+          <ArrowLeft size={16} /> Back to Home
+        </Link>
+      </div>
+
       <div className="text-center max-w-2xl mx-auto">
         <span className="text-xs font-bold uppercase tracking-wider text-[#4F46E5]">About the Platform</span>
         <h1 className="text-4xl font-extrabold text-[#111827] mt-2">Connecting Student Talent With The World</h1>

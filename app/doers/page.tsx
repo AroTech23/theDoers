@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import Link from 'next/link'
 import { MOCK_DOERS, MOCK_SKILLS } from '@/lib/mockData'
 import DoerCard from '@/components/doers/DoerCard'
-import { Search, SlidersHorizontal, X } from 'lucide-react'
+import { Search, SlidersHorizontal, X, ArrowLeft } from 'lucide-react'
 
 export default function ExploreDoersPage() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -62,9 +63,19 @@ export default function ExploreDoersPage() {
     selectedSkill !== null
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-12 w-full">
+    <div className="max-w-7xl mx-auto px-6 py-10 w-full flex flex-col gap-6">
+      {/* Previous / Back Navigation */}
+      <div>
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-xs font-bold text-[#6B7280] hover:text-[#111827] transition-colors"
+        >
+          <ArrowLeft size={16} /> Back to Home
+        </Link>
+      </div>
+
       {/* Header */}
-      <div className="max-w-2xl mb-8">
+      <div className="max-w-2xl">
         <h1 className="text-4xl font-bold text-[#111827]">Explore Doers</h1>
         <p className="mt-2 text-base text-[#6B7280]">
           Discover talented students by their skills, interests, and areas of expertise.
