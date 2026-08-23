@@ -11,7 +11,9 @@ import {
   AlertCircle, 
   Download, 
   Sparkles,
-  Image as ImageIcon 
+  Image as ImageIcon,
+  LayoutGrid,
+  Maximize2
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Avatar from '@/components/ui/Avatar';
@@ -100,10 +102,8 @@ export default async function ProjectDetailsPage({
 
             {/* Quick CTAs + Download PDF */}
             <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-              {/* PDF Document Download Button */}
               <a 
                 href={`#`} 
-                onClick={undefined}
                 download={`${project.title.toLowerCase().replace(/\s+/g, '-')}-documentation.pdf`}
                 className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-[#EEF2FF] hover:bg-[#E0E7FF] text-[#4F46E5] border border-[#C7D2FE] rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs"
                 title="Download Project Case Study Documentation (PDF)"
@@ -224,7 +224,7 @@ export default async function ProjectDetailsPage({
                 </div>
 
                 {project.desired_state && (
-                  <div className="p-5 bg-[#ECFDF5] border border-[#A7F3D0] rounded-2xl mb-6">
+                  <div className="p-5 bg-[#ECFDF5] border border-[#A7F3D0] rounded-2xl">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-[#059669] mb-1.5">
                       Target Outcome Achieved
                     </h4>
@@ -233,16 +233,65 @@ export default async function ProjectDetailsPage({
                     </p>
                   </div>
                 )}
-
-                {/* Solution Preview Frame */}
-                <div className="w-full h-64 bg-[#EEF2FF] rounded-2xl border border-[#E0E7FF] flex flex-col items-center justify-center text-[#4F46E5]/40 gap-2">
-                  <ImageIcon size={48} />
-                  <span className="text-xs font-bold tracking-wider uppercase text-[#4F46E5]">Solution Interactive Showcase</span>
-                </div>
               </section>
             )}
 
-            {/* 4. Results & Key Impact Metric */}
+            {/* ── 4. VISUALS: SCREENSHOTS & ARCHITECTURE DIAGRAMS GALLERY ── */}
+            <section className="bg-white border border-[#E2E8F0] rounded-3xl p-8 shadow-xs space-y-6">
+              <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-4">
+                <div className="flex items-center gap-2.5 text-[#4F46E5]">
+                  <LayoutGrid size={22} />
+                  <div>
+                    <h2 className="text-2xl font-extrabold text-[#0F172A] tracking-tight">Screenshots &amp; Architecture</h2>
+                    <p className="text-xs text-[#64748B] mt-0.5">Visual evidence, interface screenshots, and data flows.</p>
+                  </div>
+                </div>
+                <span className="text-xs font-bold text-[#4F46E5] bg-[#EEF2FF] px-3 py-1 rounded-full border border-[#C7D2FE]">
+                  3 Visuals
+                </span>
+              </div>
+
+              {/* Responsive Gallery Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Visual Card 1 */}
+                <div className="group rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] overflow-hidden hover:border-[#CBD5E1] hover:shadow-sm transition-all flex flex-col">
+                  <div className="aspect-video bg-[#EEF2FF] flex flex-col items-center justify-center text-[#4F46E5]/40 group-hover:text-[#4F46E5] transition-colors relative">
+                    <ImageIcon size={36} />
+                    <span className="text-[11px] font-bold mt-2 uppercase tracking-wider">Interface Walkthrough</span>
+                  </div>
+                  <div className="p-3.5 bg-white border-t border-[#E2E8F0]">
+                    <p className="text-xs font-bold text-[#0F172A]">Primary Dashboard &amp; Quiz Engine</p>
+                    <p className="text-[11px] text-[#64748B] mt-0.5">High-fidelity student workflow view</p>
+                  </div>
+                </div>
+
+                {/* Visual Card 2 */}
+                <div className="group rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] overflow-hidden hover:border-[#CBD5E1] hover:shadow-sm transition-all flex flex-col">
+                  <div className="aspect-video bg-[#F0FDF4] flex flex-col items-center justify-center text-[#16A34A]/40 group-hover:text-[#16A34A] transition-colors relative">
+                    <Layers size={36} />
+                    <span className="text-[11px] font-bold mt-2 uppercase tracking-wider">System Architecture</span>
+                  </div>
+                  <div className="p-3.5 bg-white border-t border-[#E2E8F0]">
+                    <p className="text-xs font-bold text-[#0F172A]">Vector Embedding &amp; Retrieval Pipeline</p>
+                    <p className="text-[11px] text-[#64748B] mt-0.5">End-to-end data ingestion schema</p>
+                  </div>
+                </div>
+
+                {/* Visual Card 3 (Full Width Span) */}
+                <div className="sm:col-span-2 group rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] overflow-hidden hover:border-[#CBD5E1] hover:shadow-sm transition-all flex flex-col">
+                  <div className="h-44 bg-[#FAF5FF] flex flex-col items-center justify-center text-[#7C3AED]/40 group-hover:text-[#7C3AED] transition-colors relative">
+                    <TrendingUp size={36} />
+                    <span className="text-[11px] font-bold mt-2 uppercase tracking-wider">Telemetry &amp; Benchmarks</span>
+                  </div>
+                  <div className="p-3.5 bg-white border-t border-[#E2E8F0]">
+                    <p className="text-xs font-bold text-[#0F172A]">Latency &amp; Token Efficiency Analysis</p>
+                    <p className="text-[11px] text-[#64748B] mt-0.5">Benchmark results across 1,000 synthetic test queries</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* 5. Results & Key Impact Metric */}
             {project.result && (
               <section className="bg-white border border-[#E2E8F0] rounded-3xl p-8 shadow-xs">
                 <div className="flex items-center gap-2.5 mb-4 text-[#4F46E5]">
@@ -353,7 +402,7 @@ export default async function ProjectDetailsPage({
 
         </div>
 
-        {/* ── 4. MORE PROJECTS FROM THE SAME DOER (3-Column Grid) ── */}
+        {/* ── 5. MORE PROJECTS FROM THE SAME DOER (3-Column Grid) ── */}
         <div className="mt-20 pt-12 border-t border-[#E2E8F0]">
           <div className="flex items-center justify-between mb-8">
             <div>
