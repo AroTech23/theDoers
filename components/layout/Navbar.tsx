@@ -30,8 +30,8 @@ function NavbarContent() {
   const isAboutActive = pathname === '/about'
 
   return (
-    <nav className="w-full bg-white border-b border-[#E5E7EB] sticky top-0 z-50 h-16">
-      <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
+    <nav className="w-full bg-white border-b border-[#E2E8F0] sticky top-0 z-50 h-16">
+      <div className="w-full px-6 md:px-8 lg:px-12 h-full flex items-center justify-between">
         {/* Left Side: Logo & Primary Navigation Links */}
         <div className="flex items-center gap-10 h-full">
           <Link href="/" className="flex items-center gap-2.5 text-xl font-bold text-[#111827] hover:text-[#4F46E5] transition-colors group">
