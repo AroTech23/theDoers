@@ -67,11 +67,14 @@ export default function HomePage() {
           {/* Left: Copy & Role-Aware CTAs */}
           <div className="flex flex-col gap-6">
             <div>
+              <span className="text-xs sm:text-sm font-extrabold uppercase tracking-widest text-[#4F46E5] mb-3 block">
+                WE ARE THE DOERS.
+              </span>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[#0F172A] tracking-tight leading-tight">
-                We Are <span className="text-[#4F46E5]">theDoers</span>
+                See What Students Are <span className="text-[#4F46E5]">Building.</span>
               </h1>
               <p className="mt-4 text-base sm:text-lg text-[#64748B] leading-relaxed max-w-lg">
-                Discover ethically skilled student IT engineers, innovators, and creators showcasing verified proof-of-work.
+                Discover talented student engineers, innovators, and creators through the projects they&apos;ve built. Explore their work, connect with their talent, and discover the people behind the ideas.
               </p>
             </div>
 
