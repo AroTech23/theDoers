@@ -36,19 +36,11 @@ export default function ProjectsPage() {
   return (
     <div className="max-w-7xl mx-auto px-6 py-12">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-[#111827] mb-2">My Projects</h1>
-          <p className="text-[#6B7280]">
-            Manage your projects, continue working on drafts, and keep your portfolio up to date.
-          </p>
-        </div>
-        <Link
-          href="/dashboard/projects/new"
-          className="flex items-center gap-1.5 bg-[#1F2937] hover:bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
-        >
-          <Plus size={16} /> Create New Project
-        </Link>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-[#111827] mb-2">My Projects</h1>
+        <p className="text-[#6B7280]">
+          Manage your projects, continue working on drafts, and keep your portfolio up to date.
+        </p>
       </div>
 
       {/* Tabs & Search */}
