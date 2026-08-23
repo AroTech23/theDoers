@@ -17,6 +17,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Auto-dismiss popup toast error after 5 seconds
   useEffect(() => {
@@ -32,6 +33,7 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     setErrorMessage(null);
+    setSuccessMessage(null);
 
     try {
       // 1. Authenticate with Supabase Auth
@@ -78,20 +80,24 @@ export default function LoginPage() {
         }
       }
 
-      // 4. Set Verified Session in LocalStorage & Cookies + Set Just Logged In flag
+      // 4. Set Verified Session in LocalStorage & Cookies
       if (typeof window !== 'undefined') {
         localStorage.setItem('thedoers_auth_role', role);
         localStorage.setItem('thedoers_user_name', fullName);
-        sessionStorage.setItem('thedoers_just_logged_in', 'true');
         document.cookie = `thedoers_auth_role=${role}; path=/; max-age=604800; SameSite=Lax;`;
       }
 
-      // 5. Route immediately into dashboard/admin where the welcome popup will display
-      if (role === 'admin') {
-        router.push('/admin');
-      } else {
-        router.push('/dashboard');
-      }
+      // 5. Show Success Toast Immediately on the Screen
+      setSuccessMessage(`Welcome back, ${fullName}! Logging you in...`);
+
+      // 6. Smoothly transition to Dashboard after 1.8 seconds so the user sees the popup and it closes
+      setTimeout(() => {
+        if (role === 'admin') {
+          router.push('/admin');
+        } else {
+          router.push('/dashboard');
+        }
+      }, 1800);
 
     } catch (err: any) {
       setErrorMessage(err.message || 'Invalid email or password.');
@@ -102,6 +108,21 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col bg-[#F8FAFC] relative">
       <AuthNavbar rightLink={{ label: 'Create Portfolio', href: '/register' }} />
+
+      {/* Floating Success Toast Notification Popup (Appears right upon submit) */}
+      {successMessage && (
+        <div className="fixed top-20 right-6 z-50 max-w-md w-full animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="bg-white p-4 rounded-2xl shadow-xl border border-[#A7F3D0] flex items-center gap-3.5">
+            <div className="w-9 h-9 rounded-xl bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0] flex items-center justify-center flex-shrink-0">
+              <CheckCircle2 size={20} />
+            </div>
+            <div className="flex-1">
+              <p className="text-xs font-bold text-[#0F172A] tracking-tight">Successfully Logged In</p>
+              <p className="text-xs text-[#059669] font-semibold leading-relaxed mt-0.5">{successMessage}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Floating Error Toast Notification Popup */}
       {errorMessage && (
@@ -227,7 +248,7 @@ export default function LoginPage() {
                     isLoading={isLoading}
                     className="w-full font-bold text-xs sm:text-sm shadow-xs justify-center"
                   >
-                    Log In →
+                    {successMessage ? 'Redirecting to workspace...' : 'Log In →'}
                   </Button>
                 </div>
               </form>
