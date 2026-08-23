@@ -64,8 +64,9 @@ export default function DoerNavbar() {
       localStorage.removeItem('thedoers_auth_role')
       localStorage.removeItem('thedoers_user_name')
       localStorage.removeItem('thedoers_user_email')
+      document.cookie = "thedoers_auth_role=; path=/; max-age=0;"
     }
-    router.push('/login')
+    router.push('/login?logged_out=true')
   }
 
   return (
@@ -248,6 +249,15 @@ export default function DoerNavbar() {
           >
             <ExternalLink size={13} /> Visit Public Site ↗
           </Link>
+          <button
+            onClick={() => {
+              setMobileMenuOpen(false)
+              handleLogout()
+            }}
+            className="flex items-center justify-center gap-1.5 py-2 px-4 rounded-xl text-xs font-bold text-[#EF4444] hover:bg-[#FEF2F2] border-t border-[#F1F5F9] pt-3 mt-1 cursor-pointer"
+          >
+            <LogOut size={14} /> Log Out
+          </button>
         </div>
       )}
     </nav>

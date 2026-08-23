@@ -83,7 +83,7 @@ function NavbarContent() {
     setUserName(null)
     setUserAvatar(null)
     setUserDropdownOpen(false)
-    router.push('/login')
+    router.push('/login?logged_out=true')
   }
 
   const isDoersActive = pathname === '/doers' || pathname?.startsWith('/doers/')

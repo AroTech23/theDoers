@@ -1,15 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Sparkles, CheckCircle2, ShieldCheck, ArrowRight, AlertCircle, X, Loader2 } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Eye, EyeOff, Sparkles, CheckCircle2, ShieldCheck, ArrowRight, AlertCircle, X, Loader2, LogOut } from 'lucide-react';
 import AuthNavbar from '@/components/layout/AuthNavbar';
 import Button from '@/components/ui/Button';
 import { createClient } from '@/lib/supabase/client';
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -18,6 +19,18 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [logoutMessage, setLogoutMessage] = useState<string | null>(null);
+
+  // Check if user just logged out
+  useEffect(() => {
+    if (searchParams.get('logged_out') === 'true') {
+      setLogoutMessage('You have been logged out successfully.');
+      const timer = setTimeout(() => {
+        setLogoutMessage(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams]);
 
   // Auto-dismiss popup toast error after 5 seconds
   useEffect(() => {
@@ -34,6 +47,7 @@ export default function LoginPage() {
     setIsLoading(true);
     setErrorMessage(null);
     setSuccessMessage(null);
+    setLogoutMessage(null);
 
     try {
       // 1. Authenticate with Supabase Auth
@@ -109,11 +123,32 @@ export default function LoginPage() {
     <div className="min-h-screen flex flex-col bg-[#F8FAFC] relative">
       <AuthNavbar rightLink={{ label: 'Create Portfolio', href: '/register' }} />
 
-      {/* Floating Success Toast Notification Popup (Appears right upon submit) */}
+      {/* Floating Logout Success Toast Notification Popup */}
+      {logoutMessage && (
+        <div className="fixed top-20 right-6 z-50 max-w-md w-full animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="bg-white p-4 rounded-2xl shadow-xl border border-[#C7D2FE] flex items-center gap-3.5">
+            <div className="w-9 h-9 rounded-xl bg-[#EEF2FF] text-[#4F46E5] border border-[#C7D2FE] flex items-center justify-center shrink-0">
+              <LogOut size={18} />
+            </div>
+            <div className="flex-1">
+              <p className="text-xs font-bold text-[#0F172A] tracking-tight">Logged Out Successfully</p>
+              <p className="text-xs text-[#4F46E5] font-semibold leading-relaxed mt-0.5">{logoutMessage}</p>
+            </div>
+            <button
+              onClick={() => setLogoutMessage(null)}
+              className="text-[#94A3B8] hover:text-[#0F172A] p-1 rounded-lg hover:bg-[#F8FAFC] transition-colors cursor-pointer"
+            >
+              <X size={15} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Login Success Toast Notification Popup */}
       {successMessage && (
         <div className="fixed top-20 right-6 z-50 max-w-md w-full animate-in fade-in slide-in-from-top-4 duration-300">
           <div className="bg-white p-4 rounded-2xl shadow-xl border border-[#A7F3D0] flex items-center gap-3.5">
-            <div className="w-9 h-9 rounded-xl bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0] flex items-center justify-center flex-shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0] flex items-center justify-center shrink-0">
               <CheckCircle2 size={20} />
             </div>
             <div className="flex-1">
@@ -128,7 +163,7 @@ export default function LoginPage() {
       {errorMessage && (
         <div className="fixed top-20 right-6 z-50 max-w-md w-full animate-in fade-in slide-in-from-top-4 duration-300">
           <div className="bg-white p-4 rounded-2xl shadow-lg border border-[#FCA5A5] flex items-start gap-3.5">
-            <div className="w-8 h-8 rounded-xl bg-[#FEF2F2] text-[#EF4444] border border-[#FECACA] flex items-center justify-center flex-shrink-0 mt-0.5">
+            <div className="w-8 h-8 rounded-xl bg-[#FEF2F2] text-[#EF4444] border border-[#FECACA] flex items-center justify-center shrink-0 mt-0.5">
               <AlertCircle size={18} />
             </div>
             <div className="flex-1">
@@ -267,5 +302,13 @@ export default function LoginPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#F8FAFC]" />}>
+      <LoginForm />
+    </Suspense>
   );
 }
