@@ -68,7 +68,7 @@ export default function ExploreDoersPage() {
       <div>
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-xs font-bold text-[#6B7280] hover:text-[#111827] transition-colors"
+          className="inline-flex items-center gap-2 text-xs font-bold text-[#4F46E5] hover:text-[#3730A3] transition-colors bg-[#EEF2FF] px-3.5 py-2 rounded-xl"
         >
           <ArrowLeft size={16} /> Back to Home
         </Link>
