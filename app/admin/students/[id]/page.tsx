@@ -108,11 +108,20 @@ export default function AdminStudentDetailsPage() {
               <CheckCircle2 size={16} /> Approve Registration
             </Button>
           )}
-          <Link href={`/doers/alexchen`} target="_blank">
-            <Button variant="outline" size="md" className="gap-2 font-bold">
-              <ExternalLink size={14} /> View Public Portfolio
-            </Button>
-          </Link>
+
+          {student.status === 'Active' && (
+            <Link href={`/doers/alexchen`} target="_blank">
+              <Button variant="outline" size="md" className="gap-2 font-bold">
+                <ExternalLink size={14} /> View Public Portfolio
+              </Button>
+            </Link>
+          )}
+
+          {student.status === 'Suspended' && (
+            <span className="text-xs font-bold text-[#EF4444] bg-[#FEF2F2] px-3.5 py-2 rounded-xl border border-[#FCA5A5]">
+              Portfolio Hidden (Suspended)
+            </span>
+          )}
         </div>
       </div>
 
