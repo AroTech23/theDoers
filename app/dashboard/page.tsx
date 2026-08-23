@@ -16,7 +16,9 @@ import {
   ExternalLink,
   Plus,
   Loader2,
-  Image as ImageIcon
+  Image as ImageIcon,
+  CheckCircle2,
+  X
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -28,6 +30,20 @@ export default function DashboardPage() {
   const [profile, setProfile] = useState<any>(null);
   const [skills, setSkills] = useState<string[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
+  const [welcomeToast, setWelcomeToast] = useState(false);
+
+  useEffect(() => {
+    // Check if user just logged in from /login
+    if (typeof window !== 'undefined') {
+      const justLoggedIn = sessionStorage.getItem('thedoers_just_logged_in');
+      if (justLoggedIn === 'true') {
+        setWelcomeToast(true);
+        sessionStorage.removeItem('thedoers_just_logged_in');
+        const timer = setTimeout(() => setWelcomeToast(false), 5000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     async function loadDashboardData() {
@@ -105,13 +121,36 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-10 w-full flex flex-col gap-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10 w-full flex flex-col gap-10 relative">
       
+      {/* Floating Welcome Login Toast Notification Popup */}
+      {welcomeToast && (
+        <div className="fixed top-20 right-6 z-50 max-w-md w-full animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="bg-white p-4 rounded-2xl shadow-xl border border-[#A7F3D0] flex items-start gap-3.5">
+            <div className="w-9 h-9 rounded-xl bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0] flex items-center justify-center flex-shrink-0 mt-0.5">
+              <CheckCircle2 size={20} />
+            </div>
+            <div className="flex-1">
+              <p className="text-xs font-bold text-[#0F172A] tracking-tight">Successfully Logged In</p>
+              <p className="text-xs text-[#059669] font-semibold leading-relaxed mt-0.5">
+                Welcome back, {fullName}! You are now in your workspace.
+              </p>
+            </div>
+            <button
+              onClick={() => setWelcomeToast(false)}
+              className="text-[#94A3B8] hover:text-[#0F172A] p-1 rounded-lg hover:bg-[#F8FAFC] transition-colors cursor-pointer"
+            >
+              <X size={15} />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── TOP SECTION: TWO CLEAN WHITE CARDS ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
         
         {/* Left Card: Live Profile Snapshot */}
-        <div className="bg-white border border-[#E5E7EB] rounded-3xl p-8 shadow-xs flex flex-col justify-between">
+        <div className="bg-white border border-[#E5E7EB] rounded-3xl p-6 sm:p-8 shadow-xs flex flex-col justify-between">
           <div className="flex flex-col gap-4">
             {/* Circular Avatar */}
             <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center shadow-xs">
@@ -165,7 +204,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Right Card: Portfolio Stats & Setup */}
-        <div className="bg-white border border-[#E5E7EB] rounded-3xl p-8 shadow-xs flex flex-col justify-between">
+        <div className="bg-white border border-[#E5E7EB] rounded-3xl p-6 sm:p-8 shadow-xs flex flex-col justify-between">
           <div>
             <span className="text-xs font-bold uppercase tracking-wider text-[#4F46E5] mb-2 block">
               Portfolio Overview
@@ -231,7 +270,7 @@ export default function DashboardPage() {
         </div>
 
         {projects.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.slice(0, 3).map((p) => (
               <div
                 key={p.id}
