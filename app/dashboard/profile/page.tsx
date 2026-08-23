@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { 
   ArrowLeft, 
@@ -14,7 +14,9 @@ import {
   Code2,
   Sparkles,
   AlertCircle,
-  Loader2
+  Loader2,
+  Upload,
+  Trash2
 } from 'lucide-react';
 import Avatar from '@/components/ui/Avatar';
 import Button from '@/components/ui/Button';
@@ -22,9 +24,11 @@ import { createClient } from '@/lib/supabase/client';
 
 export default function EditProfilePage() {
   const supabase = createClient();
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
 
   const [fullName, setFullName] = useState('');
@@ -33,6 +37,7 @@ export default function EditProfilePage() {
   const [program, setProgram] = useState('Computer Science');
   const [year, setYear] = useState('Year 3');
   const [username, setUsername] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   
   // Skills
   const [skills, setSkills] = useState<string[]>([]);
@@ -60,7 +65,7 @@ export default function EditProfilePage() {
         setUserId(user.id);
 
         // Fetch User details
-        const { data: profile, error } = await supabase
+        const { data: profile } = await supabase
           .from('users')
           .select('*')
           .eq('id', user.id)
@@ -73,6 +78,7 @@ export default function EditProfilePage() {
           setProgram(profile.program || 'Computer Science');
           setYear(profile.year || 'Year 3');
           setUsername(profile.username || '');
+          setAvatarUrl(profile.avatar_url || null);
           setLinkedin(profile.linkedin_url || '');
           setGithub(profile.github_url || '');
           setWebsite(profile.portfolio_url || '');
@@ -103,13 +109,65 @@ export default function EditProfilePage() {
     loadProfile();
   }, [supabase]);
 
+  // Direct Local Avatar Upload to Supabase Storage
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !userId) return;
+
+    try {
+      setUploadingAvatar(true);
+      setErrorMessage(null);
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `avatar_${userId}_${Date.now()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { cacheControl: '3600', upsert: true });
+
+      if (uploadError) {
+        // Fallback: load as local preview DataURL if bucket is creating
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          if (event.target?.result) setAvatarUrl(event.target.result as string);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        const { data: { publicUrl } } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(filePath);
+        setAvatarUrl(publicUrl);
+        // Persist avatar_url immediately to public.users
+        await supabase
+          .from('users')
+          .update({ avatar_url: publicUrl })
+          .eq('id', userId);
+      }
+    } catch (err: any) {
+      console.error('Avatar upload error:', err);
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    setAvatarUrl(null);
+    if (userId) {
+      await supabase
+        .from('users')
+        .update({ avatar_url: null })
+        .eq('id', userId);
+    }
+  };
+
   const addSkill = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && skillInput.trim() && skills.length < 10) {
       e.preventDefault();
       if (!skills.includes(skillInput.trim())) {
         setSkills([...skills, skillInput.trim()]);
-        setSkillInput('');
       }
+      setSkillInput('');
     }
   };
 
@@ -119,52 +177,46 @@ export default function EditProfilePage() {
 
   const handleSave = async () => {
     if (!userId) return;
-    setSaving(true);
-    setErrorMessage(null);
 
     try {
-      // 1. Update public.users row
-      const { error: updateError } = await supabase
+      setSaving(true);
+      setErrorMessage(null);
+
+      // 1. Update Core Profile in public.users
+      const { error: userUpdateError } = await supabase
         .from('users')
         .update({
           full_name: fullName.trim(),
-          headline: headline.trim() || null,
-          bio: about.trim() || null,
-          program: program,
-          year: year,
-          phone: whatsapp.trim() || null,
+          headline: headline.trim(),
+          bio: about.trim(),
+          program,
+          year,
+          avatar_url: avatarUrl,
           linkedin_url: linkedin.trim() || null,
           github_url: github.trim() || null,
           portfolio_url: website.trim() || null,
           whatsapp_url: whatsapp.trim() || null,
+          phone: whatsapp.trim() || null,
           instagram_url: instagram.trim() || null,
-          facebook_url: facebook.trim() || null,
+          facebook_url: facebook.trim() || null
         })
         .eq('id', userId);
 
-      if (updateError) throw updateError;
+      if (userUpdateError) throw userUpdateError;
 
-      // 2. Refresh local session name
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('thedoers_user_name', fullName.trim());
-      }
-
-      // 3. Sync skills in public.skills and public.doer_skills
-      // Delete old relations
+      // 2. Sync Skills
       await supabase.from('doer_skills').delete().eq('doer_id', userId);
 
-      // Insert new skills
       for (const sName of skills) {
-        let sId: string | null = null;
-        const { data: existing } = await supabase
+        let { data: existingSkill } = await supabase
           .from('skills')
           .select('id')
-          .eq('name', sName)
+          .ilike('name', sName)
           .maybeSingle();
 
-        if (existing) {
-          sId = existing.id;
-        } else {
+        let sId = existingSkill?.id;
+
+        if (!sId) {
           const { data: created } = await supabase
             .from('skills')
             .insert({ name: sName, category: 'General' })
@@ -214,7 +266,7 @@ export default function EditProfilePage() {
           </div>
           
           <div className="flex items-center gap-3">
-            <Link href={`/doers/${username || 'alexchen'}?from=dashboard`}>
+            <Link href={`/doers/${username || 'doer'}?from=dashboard`}>
               <Button variant="outline" size="sm" className="text-xs font-bold">
                 View Public Portfolio ↗
               </Button>
@@ -245,20 +297,53 @@ export default function EditProfilePage() {
                 Profile Information
               </h2>
 
-              {/* Photo Area */}
+              {/* Photo Area with Local Upload */}
               <div className="flex items-center gap-5 mb-6">
-                <Avatar name={fullName || 'Doer'} size="lg" className="w-16 h-16 text-lg shadow-xs" />
-                <div className="space-y-1">
-                  <span className="text-xs font-bold text-[#0F172A] block">{fullName}</span>
-                  <p className="text-[11px] text-[#64748B]">Profile avatar initialized from your initials.</p>
+                <input 
+                  type="file" 
+                  ref={avatarInputRef}
+                  accept="image/png, image/jpeg, image/webp"
+                  onChange={handleAvatarUpload}
+                  className="hidden" 
+                />
+
+                <div className="relative group cursor-pointer" onClick={() => avatarInputRef.current?.click()}>
+                  <Avatar name={fullName || 'Doer'} imageUrl={avatarUrl || undefined} size="lg" className="w-20 h-20 text-xl shadow-xs" />
+                  <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                    <Camera size={20} />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => avatarInputRef.current?.click()}
+                      disabled={uploadingAvatar}
+                      className="px-3.5 py-1.5 bg-white border border-[#CBD5E1] text-[#0F172A] hover:bg-[#F8FAFC] text-xs font-bold rounded-xl shadow-2xs transition-colors cursor-pointer"
+                    >
+                      {uploadingAvatar ? 'Uploading...' : 'Upload Photo'}
+                    </button>
+                    {avatarUrl && (
+                      <button
+                        type="button"
+                        onClick={handleRemoveAvatar}
+                        className="text-xs font-semibold text-[#EF4444] hover:underline cursor-pointer"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-[#64748B] mt-1.5">
+                    JPG, PNG or WEBP · 500x500 recommended
+                  </p>
                 </div>
               </div>
 
-              {/* Form Fields */}
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-[#0F172A] mb-1.5 uppercase tracking-wider">
-                    Full Legal Name *
+                  <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5">
+                    Full Name *
                   </label>
                   <input
                     type="text"
@@ -270,13 +355,13 @@ export default function EditProfilePage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-[#0F172A] mb-1.5 uppercase tracking-wider">
-                      Program / Degree *
+                    <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5">
+                      Degree Program *
                     </label>
                     <select
                       value={program}
                       onChange={(e) => setProgram(e.target.value)}
-                      className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5] bg-white"
+                      className="w-full rounded-xl border border-[#E2E8F0] px-3 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5] bg-white"
                     >
                       <option>Computer Science</option>
                       <option>Software Engineering</option>
@@ -284,17 +369,18 @@ export default function EditProfilePage() {
                       <option>Interactive Design &amp; HCI</option>
                       <option>Cybersecurity</option>
                       <option>Information Systems</option>
+                      <option>Business Analytics</option>
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-[#0F172A] mb-1.5 uppercase tracking-wider">
+                    <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5">
                       Year of Study *
                     </label>
                     <select
                       value={year}
                       onChange={(e) => setYear(e.target.value)}
-                      className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5] bg-white"
+                      className="w-full rounded-xl border border-[#E2E8F0] px-3 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5] bg-white"
                     >
                       <option>Year 1</option>
                       <option>Year 2</option>
@@ -310,14 +396,14 @@ export default function EditProfilePage() {
                     <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider">
                       Profile Headline *
                     </label>
-                    <span className="text-[10px] text-[#64748B]">{headline.length}/100</span>
+                    <span className="text-[10px] text-[#64748B]">{headline.length}/80</span>
                   </div>
                   <input
                     type="text"
-                    maxLength={100}
+                    maxLength={80}
                     value={headline}
                     onChange={(e) => setHeadline(e.target.value)}
-                    placeholder="e.g. Software Engineering student focused on AI systems"
+                    placeholder="e.g. Ethical IT Engineer & Distributed Systems Enthusiast"
                     className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
                   />
                 </div>
@@ -327,14 +413,14 @@ export default function EditProfilePage() {
                     <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider">
                       About / Bio *
                     </label>
-                    <span className="text-[10px] text-[#64748B]">{about.length}/600</span>
+                    <span className="text-[10px] text-[#64748B]">{about.length}/500</span>
                   </div>
                   <textarea
                     rows={4}
-                    maxLength={600}
+                    maxLength={500}
                     value={about}
                     onChange={(e) => setAbout(e.target.value)}
-                    placeholder="Describe your technical background, passions, and what you build..."
+                    placeholder="Tell visitors about your engineering interests, technical background, and what you love building..."
                     className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
                   />
                 </div>
@@ -343,149 +429,123 @@ export default function EditProfilePage() {
 
             {/* Technical Skills Card */}
             <div className="bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-xs">
-              <h2 className="text-base font-bold text-[#0F172A] mb-1">
-                Technical Skills ({skills.length}/10)
-              </h2>
-              <p className="text-xs text-[#64748B] mb-4">Add the technologies, languages, and frameworks you work with.</p>
+              <div className="flex justify-between items-center mb-1">
+                <h2 className="text-base font-bold text-[#0F172A]">Skills &amp; Technologies</h2>
+                <span className="text-[10px] text-[#64748B]">{skills.length}/10 added</span>
+              </div>
+              <p className="text-xs text-[#64748B] mb-4">
+                Add skills and frameworks that highlight your engineering abilities.
+              </p>
 
-              <div className="flex flex-wrap gap-2 mb-3 min-h-[44px] p-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl">
-                {skills.map((skill, index) => (
-                  <span
-                    key={skill}
-                    className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-[#C7D2FE] text-[#4F46E5] text-xs font-bold rounded-lg shadow-2xs"
-                  >
+              <div className="p-3 flex flex-wrap gap-2 rounded-xl border border-[#E2E8F0] focus-within:ring-2 focus-within:ring-[#4F46E5] bg-white mb-2">
+                {skills.map((skill, i) => (
+                  <span key={i} className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#EEF2FF] text-[#4F46E5] border border-[#C7D2FE]">
                     {skill}
-                    <button
-                      type="button"
-                      onClick={() => removeSkill(index)}
-                      className="text-[#94A3B8] hover:text-[#EF4444] transition-colors"
-                    >
-                      <X size={13} />
+                    <button type="button" onClick={() => removeSkill(i)} className="ml-1.5 text-[#4F46E5] hover:text-[#3730A3]">
+                      <X size={12} />
                     </button>
                   </span>
                 ))}
+                <input
+                  type="text"
+                  value={skillInput}
+                  onChange={(e) => setSkillInput(e.target.value)}
+                  onKeyDown={addSkill}
+                  placeholder="Type a skill & press Enter..."
+                  className="flex-1 min-w-[140px] outline-none text-[#0F172A] text-xs py-1"
+                />
               </div>
-
-              <input
-                type="text"
-                placeholder="Type a skill (e.g. Next.js, PyTorch, Docker) and press Enter..."
-                value={skillInput}
-                onChange={(e) => setSkillInput(e.target.value)}
-                onKeyDown={addSkill}
-                className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
-              />
             </div>
 
           </div>
 
-          {/* Right Column: Connected Profile Links (5 Cols) */}
+          {/* Right Column: Social Links (5 Cols) */}
           <div className="lg:col-span-5 space-y-6">
+            
             <div className="bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-xs">
-              <h2 className="text-base font-bold text-[#0F172A] mb-1">
-                Connected Profile Links
-              </h2>
-              <p className="text-xs text-[#64748B] mb-4">Add your social channels and developer repositories.</p>
+              <h2 className="text-base font-bold text-[#0F172A] mb-1">Profile Links</h2>
+              <p className="text-xs text-[#64748B] mb-5">
+                Only add links you are comfortable sharing publicly on your portfolio.
+              </p>
 
-              <div className="space-y-3.5 text-xs">
+              <div className="space-y-3.5">
                 <div>
-                  <label className="block text-[11px] font-bold text-[#64748B] mb-1 flex items-center gap-1.5 uppercase tracking-wider">
+                  <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1 flex items-center gap-1.5">
                     <LinkIcon size={13} /> LinkedIn
                   </label>
                   <input
                     type="url"
-                    placeholder="https://linkedin.com/in/username"
                     value={linkedin}
                     onChange={(e) => setLinkedin(e.target.value)}
+                    placeholder="https://linkedin.com/in/username"
                     className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-[#64748B] mb-1 flex items-center gap-1.5 uppercase tracking-wider">
+                  <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1 flex items-center gap-1.5">
                     <Code2 size={13} /> GitHub
                   </label>
                   <input
                     type="url"
-                    placeholder="https://github.com/username"
                     value={github}
                     onChange={(e) => setGithub(e.target.value)}
+                    placeholder="https://github.com/username"
                     className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-[#64748B] mb-1 flex items-center gap-1.5 uppercase tracking-wider">
+                  <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1 flex items-center gap-1.5">
                     <Globe size={13} /> Personal Website
                   </label>
                   <input
                     type="url"
-                    placeholder="https://yourwebsite.com"
                     value={website}
                     onChange={(e) => setWebsite(e.target.value)}
+                    placeholder="https://yourportfolio.dev"
                     className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-[#64748B] mb-1 flex items-center gap-1.5 uppercase tracking-wider">
+                  <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1 flex items-center gap-1.5">
                     <Phone size={13} /> WhatsApp Phone
                   </label>
                   <input
-                    type="text"
-                    placeholder="+1 (555) 000-0000"
+                    type="tel"
                     value={whatsapp}
                     onChange={(e) => setWhatsapp(e.target.value)}
+                    placeholder="+237 600 000 000"
                     className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-[#64748B] mb-1 flex items-center gap-1.5 uppercase tracking-wider">
+                  <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1 flex items-center gap-1.5">
                     <Camera size={13} /> Instagram
                   </label>
                   <input
                     type="url"
-                    placeholder="https://instagram.com/username"
                     value={instagram}
                     onChange={(e) => setInstagram(e.target.value)}
-                    className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-[#64748B] mb-1 flex items-center gap-1.5 uppercase tracking-wider">
-                    <Users size={13} /> Facebook
-                  </label>
-                  <input
-                    type="url"
-                    placeholder="https://facebook.com/username"
-                    value={facebook}
-                    onChange={(e) => setFacebook(e.target.value)}
+                    placeholder="https://instagram.com/username"
                     className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
                   />
                 </div>
               </div>
-            </div>
-
-            {/* Sticky Save Changes Bar */}
-            <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 flex items-center justify-between shadow-xs">
-              <div className="text-xs text-[#64748B]">
-                {savedToast ? (
-                  <span className="text-[#059669] font-bold flex items-center gap-1">
-                    <Check size={14} /> Profile updated successfully!
-                  </span>
-                ) : (
-                  <span>Unsaved changes</span>
-                )}
-              </div>
-              <Button onClick={handleSave} variant="primary" size="sm" isLoading={saving} className="font-bold shadow-xs">
-                Save Changes
-              </Button>
             </div>
 
           </div>
 
         </div>
+
+        {/* Floating Success Toast */}
+        {savedToast && (
+          <div className="fixed bottom-6 right-6 bg-[#10B981] text-white px-5 py-3 rounded-2xl shadow-lg flex items-center gap-2 text-xs font-bold z-50 animate-bounce">
+            <Check size={16} /> Profile saved successfully!
+          </div>
+        )}
 
       </div>
     </div>
