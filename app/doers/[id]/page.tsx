@@ -176,7 +176,7 @@ export default async function DoerProfilePage({ params, searchParams }: DoerProf
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {MOCK_PROJECTS.map((project) => (
-            <ProjectCard key={project.id} project={project} />
+            <ProjectCard key={project.id} project={project} authorId={doer.username || doer.id} />
           ))}
         </div>
       </div>

@@ -1,66 +1,82 @@
 import { Project } from '@/types'
 import Badge from '@/components/ui/Badge'
-import { ExternalLink, Code2, ImageOff } from 'lucide-react'
+import { ExternalLink, Code2, ArrowRight, Image as ImageIcon } from 'lucide-react'
 import Link from 'next/link'
 
 interface ProjectCardProps {
   project: Project
+  authorId?: string
 }
 
-export default function ProjectCard({ project }: ProjectCardProps) {
+export default function ProjectCard({ project, authorId }: ProjectCardProps) {
+  const projectLink = authorId 
+    ? `/projects/${project.id}?fromProfile=${authorId}` 
+    : `/projects/${project.id}`
+
   return (
-    <div className="bg-white border border-[#E5E7EB] rounded-xl overflow-hidden flex flex-col hover:shadow-md transition-shadow">
-      {/* Project Thumbnail / Banner */}
-      <div className="w-full h-44 bg-[#F3F4F6] flex items-center justify-center border-b border-[#E5E7EB] text-[#9CA3AF]">
+    <div className="bg-white border border-[#E2E8F0] rounded-2xl overflow-hidden flex flex-col hover:shadow-md hover:border-[#CBD5E1] transition-all group">
+      {/* Clickable Project Thumbnail / Banner */}
+      <Link href={projectLink} className="block w-full h-44 bg-[#EEF2FF] border-b border-[#E2E8F0] overflow-hidden relative">
         {project.image_url ? (
           <img
             src={project.image_url}
             alt={project.title}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
-          <ImageOff size={32} className="opacity-40" />
+          <div className="w-full h-full flex flex-col items-center justify-center text-[#4F46E5]/40 group-hover:text-[#4F46E5]/60 transition-colors">
+            <ImageIcon size={36} />
+            <span className="text-[10px] font-bold uppercase tracking-wider mt-1">View Case Study</span>
+          </div>
         )}
-      </div>
+      </Link>
 
       {/* Content */}
       <div className="p-6 flex flex-col flex-1 gap-3">
         {project.category && (
-          <span className="text-xs font-semibold tracking-wider text-[#4F46E5] uppercase">
+          <span className="text-[11px] font-bold tracking-wider text-[#4F46E5] uppercase">
             {project.category}
           </span>
         )}
 
-        <Link href={`/projects/${project.id}`}>
-          <h4 className="text-lg font-bold text-[#111827] hover:text-[#4F46E5] transition-colors leading-snug">
+        <Link href={projectLink}>
+          <h4 className="text-lg font-bold text-[#0F172A] hover:text-[#4F46E5] transition-colors leading-snug">
             {project.title}
           </h4>
         </Link>
 
-        <p className="text-sm text-[#6B7280] flex-1 line-clamp-3">
+        <p className="text-xs text-[#64748B] flex-1 line-clamp-3 leading-relaxed">
           {project.description}
         </p>
 
         {/* Tags */}
         {project.tags && project.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 pt-2">
-            {project.tags.map((tag) => (
-              <Badge key={tag} label={tag} />
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {project.tags.slice(0, 3).map((tag) => (
+              <Badge key={tag} label={tag} className="text-[10px] bg-[#F1F5F9] text-[#334155] px-2.5 py-0.5 rounded-md" />
             ))}
           </div>
         )}
 
-        {/* Action Links */}
-        {(project.github_url || project.live_url) && (
-          <div className="flex items-center gap-4 pt-3 mt-auto border-t border-[#F3F4F6] text-xs font-medium text-[#6B7280]">
+        {/* Bottom Actions: View Case Study & Resource Links */}
+        <div className="flex items-center justify-between pt-3 mt-auto border-t border-[#F1F5F9] text-xs">
+          <Link
+            href={projectLink}
+            className="inline-flex items-center gap-1 font-bold text-[#4F46E5] hover:text-[#3730A3] transition-colors"
+          >
+            Explore Case Study <ArrowRight size={13} />
+          </Link>
+
+          <div className="flex items-center gap-2 text-[#64748B]">
             {project.github_url && (
               <a
                 href={project.github_url}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-1 hover:text-[#111827] transition-colors"
+                title="View Code"
+                className="p-1 hover:text-[#0F172A] transition-colors"
               >
-                <Code2 size={14} /> Code
+                <Code2 size={15} />
               </a>
             )}
             {project.live_url && (
@@ -68,13 +84,14 @@ export default function ProjectCard({ project }: ProjectCardProps) {
                 href={project.live_url}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-1 hover:text-[#4F46E5] transition-colors"
+                title="Live Demo"
+                className="p-1 hover:text-[#4F46E5] transition-colors"
               >
-                <ExternalLink size={14} /> Live Demo
+                <ExternalLink size={15} />
               </a>
             )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   )

@@ -9,7 +9,7 @@ import {
   Layers, 
   CheckCircle2, 
   AlertCircle, 
-  Target, 
+  Download, 
   Sparkles,
   Image as ImageIcon 
 } from 'lucide-react';
@@ -30,17 +30,18 @@ export default async function ProjectDetailsPage({
   const resolvedSearchParams = await searchParams;
   const id = resolvedParams.id;
   const from = resolvedSearchParams?.from;
+  const fromProfile = resolvedSearchParams?.fromProfile;
 
   // Fetch project & author from mockData
   const project = MOCK_PROJECTS.find(p => p.id === id) || MOCK_PROJECTS[0];
-  const doer = MOCK_DOERS.find(d => d.id === project.doer_id) || MOCK_DOERS[0];
+  const doer = MOCK_DOERS.find(d => d.id === project.doer_id || d.username === fromProfile || d.id === fromProfile) || MOCK_DOERS[0];
   const moreProjects = MOCK_PROJECTS.filter(p => p.id !== project.id).slice(0, 3);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-24 pt-6">
       <div className="max-w-[1440px] mx-auto px-6 md:px-8 lg:px-12">
         
-        {/* ── 1. CONTEXTUAL BACK NAVIGATION ── */}
+        {/* ── 1. RELIABLE BACK NAVIGATION ── */}
         <div className="mb-6">
           {from === 'dashboard' ? (
             <Link 
@@ -51,7 +52,7 @@ export default async function ProjectDetailsPage({
             </Link>
           ) : (
             <Link 
-              href={`/doers/${doer.username || doer.id}`} 
+              href={`/doers/${fromProfile || doer.username || doer.id}`} 
               className="inline-flex items-center gap-1.5 text-xs font-bold text-[#4F46E5] hover:text-[#3730A3] transition-colors bg-[#EEF2FF] px-3.5 py-1.5 rounded-xl shadow-2xs"
             >
               <ArrowLeft size={14} /> Back to {doer.full_name}&apos;s Profile
@@ -59,7 +60,7 @@ export default async function ProjectDetailsPage({
           )}
         </div>
 
-        {/* ── 2. PROJECT HEADER (Title, Category, Description, Author Meta) ── */}
+        {/* ── 2. PROJECT HEADER (Title, Category, Description, Author Meta, PDF Download) ── */}
         <div className="bg-white border border-[#E2E8F0] rounded-3xl p-8 lg:p-10 shadow-xs mb-10">
           <div className="flex flex-wrap items-center gap-2.5 mb-4">
             <Badge 
@@ -97,8 +98,19 @@ export default async function ProjectDetailsPage({
               </div>
             </div>
 
-            {/* Quick CTAs */}
+            {/* Quick CTAs + Download PDF */}
             <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+              {/* PDF Document Download Button */}
+              <a 
+                href={`#`} 
+                onClick={undefined}
+                download={`${project.title.toLowerCase().replace(/\s+/g, '-')}-documentation.pdf`}
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-[#EEF2FF] hover:bg-[#E0E7FF] text-[#4F46E5] border border-[#C7D2FE] rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                title="Download Project Case Study Documentation (PDF)"
+              >
+                <Download size={15} /> Download PDF
+              </a>
+
               {project.live_url && (
                 <a href={project.live_url} target="_blank" rel="noreferrer" className="flex-1 sm:flex-none">
                   <Button variant="primary" size="md" className="w-full gap-2 font-bold shadow-xs">
@@ -291,29 +303,33 @@ export default async function ProjectDetailsPage({
                 </div>
               </div>
 
-              {/* Project Links */}
-              {(project.live_url || project.github_url || project.doc_url) && (
-                <div>
-                  <h3 className="text-xs font-bold text-[#64748B] uppercase tracking-wider mb-3">Project Resources</h3>
-                  <div className="space-y-2">
-                    {project.live_url && (
-                      <a href={project.live_url} target="_blank" rel="noreferrer" className="flex items-center text-xs font-bold text-[#4F46E5] hover:text-[#3730A3] p-2 rounded-xl hover:bg-[#EEF2FF] transition-colors group">
-                        <ExternalLink size={14} className="mr-2.5 text-[#4F46E5]" /> Live Demo
-                      </a>
-                    )}
-                    {project.github_url && (
-                      <a href={project.github_url} target="_blank" rel="noreferrer" className="flex items-center text-xs font-bold text-[#4F46E5] hover:text-[#3730A3] p-2 rounded-xl hover:bg-[#EEF2FF] transition-colors group">
-                        <Code2 size={14} className="mr-2.5 text-[#4F46E5]" /> GitHub Repository
-                      </a>
-                    )}
-                    {project.doc_url && (
-                      <a href={project.doc_url} target="_blank" rel="noreferrer" className="flex items-center text-xs font-bold text-[#4F46E5] hover:text-[#3730A3] p-2 rounded-xl hover:bg-[#EEF2FF] transition-colors group">
-                        <FileText size={14} className="mr-2.5 text-[#4F46E5]" /> Project Documentation
-                      </a>
-                    )}
-                  </div>
+              {/* Project Resources with PDF download */}
+              <div>
+                <h3 className="text-xs font-bold text-[#64748B] uppercase tracking-wider mb-3">Project Resources</h3>
+                <div className="space-y-2">
+                  <a 
+                    href={`#`} 
+                    className="flex items-center text-xs font-bold text-[#4F46E5] hover:text-[#3730A3] p-2 rounded-xl hover:bg-[#EEF2FF] transition-colors group"
+                  >
+                    <Download size={14} className="mr-2.5 text-[#4F46E5]" /> Download Case Study PDF
+                  </a>
+                  {project.live_url && (
+                    <a href={project.live_url} target="_blank" rel="noreferrer" className="flex items-center text-xs font-bold text-[#4F46E5] hover:text-[#3730A3] p-2 rounded-xl hover:bg-[#EEF2FF] transition-colors group">
+                      <ExternalLink size={14} className="mr-2.5 text-[#4F46E5]" /> Live Demo
+                    </a>
+                  )}
+                  {project.github_url && (
+                    <a href={project.github_url} target="_blank" rel="noreferrer" className="flex items-center text-xs font-bold text-[#4F46E5] hover:text-[#3730A3] p-2 rounded-xl hover:bg-[#EEF2FF] transition-colors group">
+                      <Code2 size={14} className="mr-2.5 text-[#4F46E5]" /> GitHub Repository
+                    </a>
+                  )}
+                  {project.doc_url && (
+                    <a href={project.doc_url} target="_blank" rel="noreferrer" className="flex items-center text-xs font-bold text-[#4F46E5] hover:text-[#3730A3] p-2 rounded-xl hover:bg-[#EEF2FF] transition-colors group">
+                      <FileText size={14} className="mr-2.5 text-[#4F46E5]" /> Project Documentation
+                    </a>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
 
             {/* About Student Card */}
@@ -356,7 +372,7 @@ export default async function ProjectDetailsPage({
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {moreProjects.map((p) => (
-              <ProjectCard key={p.id} project={p} />
+              <ProjectCard key={p.id} project={p} authorId={doer.username || doer.id} />
             ))}
           </div>
         </div>
