@@ -2,28 +2,39 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Eye, EyeOff, CheckCircle2, KeyRound, ShieldAlert, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, CheckCircle2, KeyRound, ShieldAlert, ArrowRight, AlertCircle, ArrowLeft } from 'lucide-react';
 import AuthNavbar from '@/components/layout/AuthNavbar';
 import Button from '@/components/ui/Button';
-
-type Step = 'request' | 'reset' | 'success';
+import { createClient } from '@/lib/supabase/client';
 
 export default function ForgotPasswordPage() {
-  const [step, setStep] = useState<Step>('request');
+  const supabase = createClient();
+
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleRequestSubmit = (e: React.FormEvent) => {
+  const handleRequestSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setStep('reset');
-  };
+    setIsLoading(true);
+    setErrorMessage(null);
 
-  const handleResetSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setStep('success');
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/dashboard/settings`,
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      setIsSuccess(true);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Unable to send password reset instructions. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -60,39 +71,44 @@ export default function ForgotPasswordPage() {
 
             <div className="pt-2 border-t border-[#E2E8F0]/60 flex items-center justify-between text-[11px] text-[#64748B]">
               <span>theDoers Platform</span>
-              <Link href="/login" className="font-bold text-[#4F46E5] hover:underline">
-                Back to Login
+              <Link href="/login" className="font-bold text-[#4F46E5] hover:underline flex items-center gap-1">
+                <ArrowLeft size={12} /> Back to Login
               </Link>
             </div>
           </div>
 
           {/* Right Action Section */}
-          <div className="lg:col-span-7 p-8 sm:p-10 flex flex-col justify-center">
+          <div className="lg:col-span-7 p-8 sm:p-12 flex flex-col justify-center">
             <div className="max-w-md w-full mx-auto">
               
-              {step === 'request' && (
+              {!isSuccess ? (
                 <>
                   <div className="mb-6">
-                    <h1 className="text-2xl font-extrabold text-[#0F172A] tracking-tight">
-                      Forgot your password?
-                    </h1>
-                    <p className="text-xs text-[#64748B] mt-1">
-                      Enter your email address and we&apos;ll send you instructions to reset your password.
+                    <h1 className="text-2xl font-extrabold text-[#0F172A] tracking-tight">Forgot your password?</h1>
+                    <p className="text-xs text-[#64748B] mt-1.5 leading-relaxed">
+                      Enter your university or registered email address and we&apos;ll send you instructions to reset your password.
                     </p>
                   </div>
 
+                  {errorMessage && (
+                    <div className="mb-5 p-3.5 rounded-xl bg-[#FEF2F2] border border-[#FCA5A5] flex items-center gap-2.5 text-xs font-semibold text-[#B91C1C]">
+                      <AlertCircle size={16} className="shrink-0 text-[#EF4444]" />
+                      <span>{errorMessage}</span>
+                    </div>
+                  )}
+
                   <form onSubmit={handleRequestSubmit} className="space-y-4">
                     <div>
-                      <label className="block text-xs font-bold text-[#334155] mb-1.5 uppercase tracking-wider">
+                      <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5">
                         Email Address *
                       </label>
                       <input
                         type="email"
                         required
+                        placeholder="e.g. alex.chen@university.edu"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="alex@example.com"
-                        className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
+                        className="w-full px-4 py-2.5 text-xs border border-[#E2E8F0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5] text-[#0F172A]"
                       />
                     </div>
 
@@ -100,116 +116,39 @@ export default function ForgotPasswordPage() {
                       <Button
                         type="submit"
                         variant="primary"
-                        size="md"
-                        className="w-full py-2.5 font-bold text-sm shadow-xs"
+                        size="lg"
+                        isLoading={isLoading}
+                        className="w-full font-bold shadow-xs"
                       >
-                        Send Reset Instructions <ArrowRight size={14} className="ml-1.5" />
-                      </Button>
-                    </div>
-                  </form>
-
-                  <div className="mt-6 text-center">
-                    <Link
-                      href="/login"
-                      className="text-xs font-semibold text-[#64748B] hover:text-[#0F172A] transition-colors"
-                    >
-                      ← Back to Log In
-                    </Link>
-                  </div>
-                </>
-              )}
-
-              {step === 'reset' && (
-                <>
-                  <div className="mb-6">
-                    <h1 className="text-2xl font-extrabold text-[#0F172A] tracking-tight">
-                      Create a new password
-                    </h1>
-                    <p className="text-xs text-[#64748B] mt-1">
-                      Choose a secure new password for your theDoers account.
-                    </p>
-                  </div>
-
-                  <form onSubmit={handleResetSubmit} className="space-y-4">
-                    <div>
-                      <label className="block text-xs font-bold text-[#334155] mb-1.5 uppercase tracking-wider">
-                        New Password *
-                      </label>
-                      <div className="relative">
-                        <input
-                          type={showPassword ? 'text' : 'password'}
-                          required
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          placeholder="••••••••"
-                          className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#0F172A]"
-                        >
-                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                        </button>
-                      </div>
-                      <p className="text-[11px] text-[#64748B] mt-1">At least 8 characters</p>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-[#334155] mb-1.5 uppercase tracking-wider">
-                        Confirm New Password *
-                      </label>
-                      <div className="relative">
-                        <input
-                          type={showConfirmPassword ? 'text' : 'password'}
-                          required
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          placeholder="••••••••"
-                          className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#0F172A]"
-                        >
-                          {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="pt-2">
-                      <Button
-                        type="submit"
-                        variant="primary"
-                        size="md"
-                        className="w-full py-2.5 font-bold text-sm shadow-xs"
-                      >
-                        Reset Password <ArrowRight size={14} className="ml-1.5" />
+                        Send Reset Instructions <ArrowRight size={15} className="ml-1" />
                       </Button>
                     </div>
                   </form>
                 </>
-              )}
-
-              {step === 'success' && (
-                <div className="text-center py-4">
-                  <div className="w-14 h-14 bg-[#D1FAE5] text-[#059669] rounded-2xl flex items-center justify-center mx-auto mb-4 border border-[#A7F3D0]">
+              ) : (
+                <div className="text-center space-y-4 py-4">
+                  <div className="w-14 h-14 rounded-full bg-[#DEF7EC] text-[#03543F] flex items-center justify-center mx-auto shadow-2xs">
                     <CheckCircle2 size={32} />
                   </div>
-                  <h1 className="text-2xl font-extrabold text-[#0F172A] tracking-tight mb-2">
-                    Password reset successful
-                  </h1>
-                  <p className="text-xs text-[#64748B] mb-6 leading-relaxed">
-                    Your password has been updated. You can now log in with your new credentials.
+                  <h3 className="text-2xl font-extrabold text-[#0F172A]">Instructions Sent!</h3>
+                  <p className="text-xs text-[#64748B] leading-relaxed max-w-sm mx-auto">
+                    We have sent a secure password reset link to <strong className="text-[#0F172A]">{email}</strong>. Please check your inbox or spam folder.
                   </p>
-                  <Link href="/login">
-                    <Button variant="primary" size="md" className="w-full py-2.5 font-bold text-sm shadow-xs">
-                      Log In <ArrowRight size={14} className="ml-1.5" />
-                    </Button>
-                  </Link>
+                  <div className="pt-3">
+                    <Link href="/login">
+                      <Button variant="outline" size="md" className="font-bold">
+                        ← Return to Log In
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
               )}
+
+              <div className="mt-6 pt-5 border-t border-[#F1F5F9] text-center">
+                <Link href="/login" className="text-xs text-[#64748B] hover:text-[#4F46E5] font-semibold">
+                  Remember your password? <strong className="text-[#4F46E5]">Log In</strong>
+                </Link>
+              </div>
 
             </div>
           </div>
@@ -217,10 +156,11 @@ export default function ForgotPasswordPage() {
         </div>
       </main>
 
-      <footer className="py-5 px-6 border-t border-[#E2E8F0] bg-white flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#64748B]">
-        <div className="font-semibold text-[#0F172A]">theDoers</div>
-        <div>© {new Date().getFullYear()} theDoers. All rights reserved.</div>
-        <div className="flex gap-4 font-medium">
+      <footer className="py-6 px-6 md:px-12 border-t border-[#E2E8F0] flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-[#64748B] bg-white">
+        <div className="font-bold text-[#0F172A]">theDoers</div>
+        <div>© 2024 theDoers. All rights reserved.</div>
+        <div className="flex gap-4">
+          <Link href="/about" className="hover:text-[#0F172A]">About Us</Link>
           <Link href="#" className="hover:text-[#0F172A]">Terms of Service</Link>
           <Link href="#" className="hover:text-[#0F172A]">Privacy Policy</Link>
           <Link href="#" className="hover:text-[#0F172A]">Support</Link>

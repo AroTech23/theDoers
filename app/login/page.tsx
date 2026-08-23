@@ -3,37 +3,70 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Sparkles, CheckCircle2, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, Sparkles, CheckCircle2, ShieldCheck, ArrowRight, AlertCircle } from 'lucide-react';
 import AuthNavbar from '@/components/layout/AuthNavbar';
 import Button from '@/components/ui/Button';
+import { createClient } from '@/lib/supabase/client';
 
 export default function LoginPage() {
   const router = useRouter();
+  const supabase = createClient();
+
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setTimeout(() => {
-      if (email.toLowerCase().includes('admin')) {
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('thedoers_auth_role', 'admin');
-          localStorage.setItem('thedoers_user_name', 'Admin');
-          document.cookie = "thedoers_auth_role=admin; path=/; max-age=604800; SameSite=Lax;";
-        }
+    setErrorMessage(null);
+
+    try {
+      // 1. Authenticate with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password
+      });
+
+      if (authError) {
+        throw new Error(authError.message);
+      }
+
+      const user = authData.user;
+      if (!user) {
+        throw new Error('Authentication failed.');
+      }
+
+      // 2. Fetch User Role & Status from public.users
+      const { data: profile } = await supabase
+        .from('users')
+        .select('role, full_name, status')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      const role = profile?.role || (email.toLowerCase().includes('admin') ? 'admin' : 'doer');
+      const fullName = profile?.full_name || user.user_metadata?.full_name || 'Doer';
+
+      // 3. Set Session in LocalStorage & Cookies
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('thedoers_auth_role', role);
+        localStorage.setItem('thedoers_user_name', fullName);
+        document.cookie = `thedoers_auth_role=${role}; path=/; max-age=604800; SameSite=Lax;`;
+      }
+
+      // 4. Route based on verified role
+      if (role === 'admin') {
         router.push('/admin');
       } else {
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('thedoers_auth_role', 'doer');
-          localStorage.setItem('thedoers_user_name', 'Alex Chen');
-          document.cookie = "thedoers_auth_role=doer; path=/; max-age=604800; SameSite=Lax;";
-        }
         router.push('/dashboard');
       }
-    }, 400);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Invalid email or password.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -88,6 +121,13 @@ export default function LoginPage() {
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight">Welcome back</h1>
                 <p className="text-xs text-[#64748B] mt-1">Log in to manage your projects, credentials, and portfolio.</p>
               </div>
+
+              {errorMessage && (
+                <div className="mb-5 p-3.5 rounded-xl bg-[#FEF2F2] border border-[#FCA5A5] flex items-center gap-2.5 text-xs font-semibold text-[#B91C1C]">
+                  <AlertCircle size={16} className="shrink-0 text-[#EF4444]" />
+                  <span>{errorMessage}</span>
+                </div>
+              )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
