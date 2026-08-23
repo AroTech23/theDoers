@@ -105,13 +105,27 @@ export default function RegisterPage() {
     setErrorMessage(null);
 
     try {
-      // 1. Sign up user via Supabase Auth
+      const cleanUsername = formData.name.toLowerCase().replace(/[^a-z0-9]/g, '') || `user${Date.now().toString().slice(-4)}`;
+
+      // 1. Sign up user via Supabase Auth with full metadata included
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email.trim(),
         password: formData.password,
         options: {
           data: {
-            full_name: formData.name.trim()
+            full_name: formData.name.trim(),
+            username: cleanUsername,
+            phone: formData.links.whatsapp || null,
+            program: formData.program,
+            year: formData.year,
+            headline: formData.headline || null,
+            bio: formData.about || null,
+            linkedin_url: formData.links.linkedin || null,
+            github_url: formData.links.github || null,
+            portfolio_url: formData.links.website || null,
+            whatsapp_url: formData.links.whatsapp || null,
+            instagram_url: formData.links.instagram || null,
+            facebook_url: formData.links.facebook || null
           }
         }
       });
@@ -125,11 +139,8 @@ export default function RegisterPage() {
         throw new Error('User creation failed. Please try again.');
       }
 
-      // 2. Generate clean username from name or email
-      const cleanUsername = formData.name.toLowerCase().replace(/[^a-z0-9]/g, '') || `user${Date.now().toString().slice(-4)}`;
-
-      // 3. Upsert full student profile details into public.users
-      const { error: profileError } = await supabase
+      // 2. Explicitly ensure public.users is updated
+      await supabase
         .from('users')
         .upsert({
           id: userId,
@@ -150,17 +161,12 @@ export default function RegisterPage() {
           role: 'doer',
           status: 'pending',
           is_featured: false
-        });
+        }, { onConflict: 'id' });
 
-      if (profileError) {
-        console.error('Profile update error:', profileError);
-      }
-
-      // 4. Connect / Insert Skills in public.skills & public.doer_skills
+      // 3. Connect Skills in public.skills & public.doer_skills
       for (const skillName of skills) {
         let skillId: string | null = null;
         
-        // Find existing skill or insert new
         const { data: existingSkill } = await supabase
           .from('skills')
           .select('id')
@@ -185,7 +191,7 @@ export default function RegisterPage() {
         }
       }
 
-      // 5. Store session role & cookies for instant seamless access
+      // 4. Store session role & cookies for instant seamless access
       if (typeof window !== 'undefined') {
         localStorage.setItem('thedoers_auth_role', 'doer');
         localStorage.setItem('thedoers_user_name', formData.name.trim());
