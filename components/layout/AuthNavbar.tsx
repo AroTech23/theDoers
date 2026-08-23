@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Button from '@/components/ui/Button';
 
 interface AuthNavbarProps {
   rightLink?: {
@@ -11,8 +12,8 @@ interface AuthNavbarProps {
 
 export default function AuthNavbar({ rightLink }: AuthNavbarProps) {
   return (
-    <nav className="flex items-center justify-between px-6 h-16 bg-white border-b border-[#E2E8F0] sticky top-0 z-50">
-      {/* Clicking logo returns to home naturally */}
+    <nav className="w-full flex items-center justify-between px-6 md:px-8 lg:px-12 h-16 bg-white border-b border-[#E2E8F0] sticky top-0 z-50">
+      {/* Brand Logo links to Home */}
       <Link
         href="/"
         className="flex items-center gap-2.5 text-xl font-bold text-[#0F172A] hover:text-[#4F46E5] transition-colors group"
@@ -25,12 +26,16 @@ export default function AuthNavbar({ rightLink }: AuthNavbarProps) {
         <span>theDoers</span>
       </Link>
 
+      {/* Styled Interactive Button on the Top Right */}
       {rightLink && (
-        <Link
-          href={rightLink.href}
-          className="text-sm font-semibold text-[#0F172A] hover:text-[#4F46E5] transition-colors"
-        >
-          {rightLink.label}
+        <Link href={rightLink.href}>
+          <Button
+            variant={rightLink.label.toLowerCase().includes('create') || rightLink.label.toLowerCase().includes('become') ? 'primary' : 'outline'}
+            size="sm"
+            className="font-bold text-xs shadow-2xs cursor-pointer"
+          >
+            {rightLink.label}
+          </Button>
         </Link>
       )}
     </nav>
