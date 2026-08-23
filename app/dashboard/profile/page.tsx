@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   ArrowLeft, 
@@ -12,40 +12,104 @@ import {
   X, 
   Check, 
   Code2,
-  Sparkles
+  Sparkles,
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
 import Avatar from '@/components/ui/Avatar';
 import Button from '@/components/ui/Button';
-import { MOCK_DOERS } from '@/lib/mockData';
+import { createClient } from '@/lib/supabase/client';
 
 export default function EditProfilePage() {
-  const currentDoer = MOCK_DOERS[0];
+  const supabase = createClient();
 
-  const [fullName, setFullName] = useState(currentDoer.full_name || 'Alex Chen');
-  const [headline, setHeadline] = useState(currentDoer.bio || 'Software Engineering student interested in AI');
-  const [about, setAbout] = useState('I build robust, production-grade applications with a focus on machine learning and scalable web backend architectures. Eager to solve real-world problems through clean code.');
-  const [program, setProgram] = useState(currentDoer.program || 'Computer Science');
-  const [year, setYear] = useState(currentDoer.year || 'Year 3');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  const [fullName, setFullName] = useState('');
+  const [headline, setHeadline] = useState('');
+  const [about, setAbout] = useState('');
+  const [program, setProgram] = useState('Computer Science');
+  const [year, setYear] = useState('Year 3');
+  const [username, setUsername] = useState('');
   
   // Skills
-  const [skills, setSkills] = useState(['Python', 'React', 'Machine Learning', 'UI/UX']);
+  const [skills, setSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState('');
   
   // Social Links
-  const [linkedin, setLinkedin] = useState('https://linkedin.com/in/alexchen');
-  const [github, setGithub] = useState('https://github.com/alexchen');
-  const [website, setWebsite] = useState('https://alexchen.dev');
+  const [linkedin, setLinkedin] = useState('');
+  const [github, setGithub] = useState('');
+  const [website, setWebsite] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [instagram, setInstagram] = useState('');
   const [facebook, setFacebook] = useState('');
 
   const [savedToast, setSavedToast] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Fetch logged in student's live profile & skills from Supabase
+  useEffect(() => {
+    async function loadProfile() {
+      try {
+        setLoading(true);
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        setUserId(user.id);
+
+        // Fetch User details
+        const { data: profile, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (profile) {
+          setFullName(profile.full_name || '');
+          setHeadline(profile.headline || '');
+          setAbout(profile.bio || '');
+          setProgram(profile.program || 'Computer Science');
+          setYear(profile.year || 'Year 3');
+          setUsername(profile.username || '');
+          setLinkedin(profile.linkedin_url || '');
+          setGithub(profile.github_url || '');
+          setWebsite(profile.portfolio_url || '');
+          setWhatsapp(profile.whatsapp_url || profile.phone || '');
+          setInstagram(profile.instagram_url || '');
+          setFacebook(profile.facebook_url || '');
+        }
+
+        // Fetch attached skills
+        const { data: doerSkills } = await supabase
+          .from('doer_skills')
+          .select('skill:skills(name)')
+          .eq('doer_id', user.id);
+
+        if (doerSkills && doerSkills.length > 0) {
+          const loadedSkills = doerSkills
+            .map((ds: any) => ds.skill?.name)
+            .filter(Boolean);
+          setSkills(loadedSkills);
+        }
+      } catch (err: any) {
+        console.error('Error loading profile:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadProfile();
+  }, [supabase]);
 
   const addSkill = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && skillInput.trim() && skills.length < 10) {
       e.preventDefault();
-      setSkills([...skills, skillInput.trim()]);
-      setSkillInput('');
+      if (!skills.includes(skillInput.trim())) {
+        setSkills([...skills, skillInput.trim()]);
+        setSkillInput('');
+      }
     }
   };
 
@@ -53,10 +117,84 @@ export default function EditProfilePage() {
     setSkills(skills.filter((_, index) => index !== indexToRemove));
   };
 
-  const handleSave = () => {
-    setSavedToast(true);
-    setTimeout(() => setSavedToast(false), 3000);
+  const handleSave = async () => {
+    if (!userId) return;
+    setSaving(true);
+    setErrorMessage(null);
+
+    try {
+      // 1. Update public.users row
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({
+          full_name: fullName.trim(),
+          headline: headline.trim() || null,
+          bio: about.trim() || null,
+          program: program,
+          year: year,
+          phone: whatsapp.trim() || null,
+          linkedin_url: linkedin.trim() || null,
+          github_url: github.trim() || null,
+          portfolio_url: website.trim() || null,
+          whatsapp_url: whatsapp.trim() || null,
+          instagram_url: instagram.trim() || null,
+          facebook_url: facebook.trim() || null,
+        })
+        .eq('id', userId);
+
+      if (updateError) throw updateError;
+
+      // 2. Refresh local session name
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('thedoers_user_name', fullName.trim());
+      }
+
+      // 3. Sync skills in public.skills and public.doer_skills
+      // Delete old relations
+      await supabase.from('doer_skills').delete().eq('doer_id', userId);
+
+      // Insert new skills
+      for (const sName of skills) {
+        let sId: string | null = null;
+        const { data: existing } = await supabase
+          .from('skills')
+          .select('id')
+          .eq('name', sName)
+          .maybeSingle();
+
+        if (existing) {
+          sId = existing.id;
+        } else {
+          const { data: created } = await supabase
+            .from('skills')
+            .insert({ name: sName, category: 'General' })
+            .select('id')
+            .maybeSingle();
+          if (created) sId = created.id;
+        }
+
+        if (sId) {
+          await supabase.from('doer_skills').insert({ doer_id: userId, skill_id: sId });
+        }
+      }
+
+      setSavedToast(true);
+      setTimeout(() => setSavedToast(false), 3000);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Failed to update profile.');
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3">
+        <Loader2 size={32} className="animate-spin text-[#4F46E5]" />
+        <p className="text-xs font-bold text-[#64748B]">Loading your student profile...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-20 pt-6">
@@ -76,16 +214,24 @@ export default function EditProfilePage() {
           </div>
           
           <div className="flex items-center gap-3">
-            <Link href={`/doers/${currentDoer.username || currentDoer.id}?from=dashboard`}>
+            <Link href={`/doers/${username || 'alexchen'}?from=dashboard`}>
               <Button variant="outline" size="sm" className="text-xs font-bold">
                 View Public Portfolio ↗
               </Button>
             </Link>
-            <Button onClick={handleSave} variant="primary" size="sm" className="text-xs font-bold shadow-xs">
+            <Button onClick={handleSave} variant="primary" size="sm" isLoading={saving} className="text-xs font-bold shadow-xs">
               Save Changes
             </Button>
           </div>
         </div>
+
+        {/* Global Error Banner */}
+        {errorMessage && (
+          <div className="mb-6 p-4 rounded-2xl bg-[#FEF2F2] border border-[#FCA5A5] flex items-center gap-3 text-xs font-semibold text-[#B91C1C]">
+            <AlertCircle size={18} className="shrink-0 text-[#EF4444]" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
 
         {/* 2-Column Balanced Dashboard Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -98,141 +244,123 @@ export default function EditProfilePage() {
               <h2 className="text-base font-bold text-[#0F172A] mb-5 pb-3 border-b border-[#F1F5F9]">
                 Profile Information
               </h2>
-              
-              {/* Avatar Section */}
-              <div className="flex items-center mb-6 gap-5">
-                <Avatar name={fullName} imageUrl={currentDoer.avatar_url} size="lg" className="w-16 h-16 text-lg shadow-2xs" />
-                <div className="space-y-1.5">
-                  <Button variant="outline" size="sm" className="text-xs font-semibold py-1">
-                    Change Photo
-                  </Button>
+
+              {/* Photo Area */}
+              <div className="flex items-center gap-5 mb-6">
+                <Avatar name={fullName || 'Doer'} size="lg" className="w-16 h-16 text-lg shadow-xs" />
+                <div className="space-y-1">
+                  <span className="text-xs font-bold text-[#0F172A] block">{fullName}</span>
+                  <p className="text-[11px] text-[#64748B]">Profile avatar initialized from your initials.</p>
+                </div>
+              </div>
+
+              {/* Form Fields */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-[#0F172A] mb-1.5 uppercase tracking-wider">
+                    Full Legal Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <button className="text-[11px] font-semibold text-red-500 hover:text-red-700 cursor-pointer">
-                      Remove
-                    </button>
+                    <label className="block text-xs font-bold text-[#0F172A] mb-1.5 uppercase tracking-wider">
+                      Program / Degree *
+                    </label>
+                    <select
+                      value={program}
+                      onChange={(e) => setProgram(e.target.value)}
+                      className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5] bg-white"
+                    >
+                      <option>Computer Science</option>
+                      <option>Software Engineering</option>
+                      <option>Data Science &amp; AI</option>
+                      <option>Interactive Design &amp; HCI</option>
+                      <option>Cybersecurity</option>
+                      <option>Information Systems</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#0F172A] mb-1.5 uppercase tracking-wider">
+                      Year of Study *
+                    </label>
+                    <select
+                      value={year}
+                      onChange={(e) => setYear(e.target.value)}
+                      className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5] bg-white"
+                    >
+                      <option>Year 1</option>
+                      <option>Year 2</option>
+                      <option>Year 3</option>
+                      <option>Year 4</option>
+                      <option>Master&apos;s</option>
+                    </select>
                   </div>
                 </div>
-              </div>
 
-              {/* Full Name */}
-              <div className="mb-4">
-                <label className="block text-xs font-bold text-[#334155] mb-1.5 uppercase tracking-wider">
-                  Full Name *
-                </label>
-                <input
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="e.g. Alex Chen"
-                  className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
-                />
-              </div>
-
-              {/* Program & Year */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-xs font-bold text-[#334155] mb-1.5 uppercase tracking-wider">
-                    Program *
-                  </label>
-                  <select
-                    value={program}
-                    onChange={(e) => setProgram(e.target.value)}
-                    className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] bg-white focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
-                  >
-                    <option value="Computer Science">Computer Science</option>
-                    <option value="Software Engineering">Software Engineering</option>
-                    <option value="Data Science">Data Science</option>
-                    <option value="UX Design">UX Design</option>
-                    <option value="Cybersecurity">Cybersecurity</option>
-                    <option value="Information Systems">Information Systems</option>
-                  </select>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider">
+                      Profile Headline *
+                    </label>
+                    <span className="text-[10px] text-[#64748B]">{headline.length}/100</span>
+                  </div>
+                  <input
+                    type="text"
+                    maxLength={100}
+                    value={headline}
+                    onChange={(e) => setHeadline(e.target.value)}
+                    placeholder="e.g. Software Engineering student focused on AI systems"
+                    className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
+                  />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-[#334155] mb-1.5 uppercase tracking-wider">
-                    Year of Study *
-                  </label>
-                  <select
-                    value={year}
-                    onChange={(e) => setYear(e.target.value)}
-                    className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] bg-white focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
-                  >
-                    <option value="Year 1">Year 1</option>
-                    <option value="Year 2">Year 2</option>
-                    <option value="Year 3">Year 3</option>
-                    <option value="Year 4">Year 4</option>
-                    <option value="Senior">Senior</option>
-                  </select>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider">
+                      About / Bio *
+                    </label>
+                    <span className="text-[10px] text-[#64748B]">{about.length}/600</span>
+                  </div>
+                  <textarea
+                    rows={4}
+                    maxLength={600}
+                    value={about}
+                    onChange={(e) => setAbout(e.target.value)}
+                    placeholder="Describe your technical background, passions, and what you build..."
+                    className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
+                  />
                 </div>
-              </div>
-
-              {/* Headline */}
-              <div className="mb-4">
-                <div className="flex justify-between items-center mb-1.5">
-                  <label className="block text-xs font-bold text-[#334155] uppercase tracking-wider">
-                    Profile Headline *
-                  </label>
-                  <span className="text-[10px] text-[#64748B] font-mono">{headline.length} / 80</span>
-                </div>
-                <input
-                  type="text"
-                  maxLength={80}
-                  value={headline}
-                  onChange={(e) => setHeadline(e.target.value)}
-                  placeholder="Brief professional headline"
-                  className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
-                />
-              </div>
-
-              {/* About / Bio */}
-              <div>
-                <div className="flex justify-between items-center mb-1.5">
-                  <label className="block text-xs font-bold text-[#334155] uppercase tracking-wider">
-                    About *
-                  </label>
-                  <span className="text-[10px] text-[#64748B] font-mono">{about.length} / 500</span>
-                </div>
-                <textarea
-                  rows={4}
-                  maxLength={500}
-                  value={about}
-                  onChange={(e) => setAbout(e.target.value)}
-                  placeholder="Tell visitors about your background and engineering passion..."
-                  className="w-full rounded-xl border border-[#E2E8F0] p-3.5 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5] leading-relaxed"
-                />
               </div>
             </div>
 
-          </div>
-
-          {/* Right Column: Skills & Profile Links (5 Cols) */}
-          <div className="lg:col-span-5 space-y-6">
-            
-            {/* Skills Card */}
+            {/* Technical Skills Card */}
             <div className="bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-xs">
-              <div className="flex items-center justify-between mb-3 pb-3 border-b border-[#F1F5F9]">
-                <div>
-                  <h2 className="text-base font-bold text-[#0F172A]">Skills &amp; Technologies</h2>
-                  <p className="text-[11px] text-[#64748B]">Tags that highlight your tech stack.</p>
-                </div>
-                <span className="text-[10px] font-bold text-[#4F46E5] bg-[#EEF2FF] px-2 py-0.5 rounded-full">
-                  {skills.length}/10
-                </span>
-              </div>
+              <h2 className="text-base font-bold text-[#0F172A] mb-1">
+                Technical Skills ({skills.length}/10)
+              </h2>
+              <p className="text-xs text-[#64748B] mb-4">Add the technologies, languages, and frameworks you work with.</p>
 
-              <div className="flex flex-wrap gap-1.5 mb-3">
+              <div className="flex flex-wrap gap-2 mb-3 min-h-[44px] p-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl">
                 {skills.map((skill, index) => (
                   <span
                     key={skill}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#F1F5F9] text-[#0F172A] border border-[#E2E8F0]"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-[#C7D2FE] text-[#4F46E5] text-xs font-bold rounded-lg shadow-2xs"
                   >
                     {skill}
                     <button
                       type="button"
                       onClick={() => removeSkill(index)}
-                      className="text-[#94A3B8] hover:text-red-600 cursor-pointer"
+                      className="text-[#94A3B8] hover:text-[#EF4444] transition-colors"
                     >
-                      <X size={12} />
+                      <X size={13} />
                     </button>
                   </span>
                 ))}
@@ -240,96 +368,117 @@ export default function EditProfilePage() {
 
               <input
                 type="text"
+                placeholder="Type a skill (e.g. Next.js, PyTorch, Docker) and press Enter..."
                 value={skillInput}
                 onChange={(e) => setSkillInput(e.target.value)}
                 onKeyDown={addSkill}
-                placeholder="Type a skill and press Enter..."
                 className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
               />
             </div>
 
-            {/* Profile Links Card */}
+          </div>
+
+          {/* Right Column: Connected Profile Links (5 Cols) */}
+          <div className="lg:col-span-5 space-y-6">
             <div className="bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-xs">
-              <h2 className="text-base font-bold text-[#0F172A] mb-1">Profile Links</h2>
-              <p className="text-[11px] text-[#64748B] mb-4 pb-3 border-b border-[#F1F5F9]">
-                Add links displayed on your public portfolio.
-              </p>
+              <h2 className="text-base font-bold text-[#0F172A] mb-1">
+                Connected Profile Links
+              </h2>
+              <p className="text-xs text-[#64748B] mb-4">Add your social channels and developer repositories.</p>
 
-              <div className="space-y-3">
-                {/* LinkedIn */}
+              <div className="space-y-3.5 text-xs">
                 <div>
-                  <label className="block text-[11px] font-bold text-[#334155] mb-1">LinkedIn</label>
-                  <div className="relative flex items-center">
-                    <LinkIcon className="absolute left-3 text-[#94A3B8] w-3.5 h-3.5" />
-                    <input
-                      type="text"
-                      value={linkedin}
-                      onChange={(e) => setLinkedin(e.target.value)}
-                      placeholder="https://linkedin.com/in/username"
-                      className="w-full pl-8 pr-3 py-1.5 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
-                    />
-                  </div>
+                  <label className="block text-[11px] font-bold text-[#64748B] mb-1 flex items-center gap-1.5 uppercase tracking-wider">
+                    <LinkIcon size={13} /> LinkedIn
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://linkedin.com/in/username"
+                    value={linkedin}
+                    onChange={(e) => setLinkedin(e.target.value)}
+                    className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
+                  />
                 </div>
 
-                {/* GitHub */}
                 <div>
-                  <label className="block text-[11px] font-bold text-[#334155] mb-1">GitHub</label>
-                  <div className="relative flex items-center">
-                    <Code2 className="absolute left-3 text-[#94A3B8] w-3.5 h-3.5" />
-                    <input
-                      type="text"
-                      value={github}
-                      onChange={(e) => setGithub(e.target.value)}
-                      placeholder="https://github.com/username"
-                      className="w-full pl-8 pr-3 py-1.5 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
-                    />
-                  </div>
+                  <label className="block text-[11px] font-bold text-[#64748B] mb-1 flex items-center gap-1.5 uppercase tracking-wider">
+                    <Code2 size={13} /> GitHub
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://github.com/username"
+                    value={github}
+                    onChange={(e) => setGithub(e.target.value)}
+                    className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
+                  />
                 </div>
 
-                {/* Personal Website */}
                 <div>
-                  <label className="block text-[11px] font-bold text-[#334155] mb-1">Personal Website</label>
-                  <div className="relative flex items-center">
-                    <Globe className="absolute left-3 text-[#94A3B8] w-3.5 h-3.5" />
-                    <input
-                      type="text"
-                      value={website}
-                      onChange={(e) => setWebsite(e.target.value)}
-                      placeholder="https://yourwebsite.com"
-                      className="w-full pl-8 pr-3 py-1.5 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
-                    />
-                  </div>
+                  <label className="block text-[11px] font-bold text-[#64748B] mb-1 flex items-center gap-1.5 uppercase tracking-wider">
+                    <Globe size={13} /> Personal Website
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://yourwebsite.com"
+                    value={website}
+                    onChange={(e) => setWebsite(e.target.value)}
+                    className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
+                  />
                 </div>
 
-                {/* WhatsApp */}
                 <div>
-                  <label className="block text-[11px] font-bold text-[#334155] mb-1">WhatsApp Phone</label>
-                  <div className="relative flex items-center">
-                    <Phone className="absolute left-3 text-[#94A3B8] w-3.5 h-3.5" />
-                    <input
-                      type="text"
-                      value={whatsapp}
-                      onChange={(e) => setWhatsapp(e.target.value)}
-                      placeholder="+237 600 000 000"
-                      className="w-full pl-8 pr-3 py-1.5 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
-                    />
-                  </div>
+                  <label className="block text-[11px] font-bold text-[#64748B] mb-1 flex items-center gap-1.5 uppercase tracking-wider">
+                    <Phone size={13} /> WhatsApp Phone
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="+1 (555) 000-0000"
+                    value={whatsapp}
+                    onChange={(e) => setWhatsapp(e.target.value)}
+                    className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-[#64748B] mb-1 flex items-center gap-1.5 uppercase tracking-wider">
+                    <Camera size={13} /> Instagram
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://instagram.com/username"
+                    value={instagram}
+                    onChange={(e) => setInstagram(e.target.value)}
+                    className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-[#64748B] mb-1 flex items-center gap-1.5 uppercase tracking-wider">
+                    <Users size={13} /> Facebook
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://facebook.com/username"
+                    value={facebook}
+                    onChange={(e) => setFacebook(e.target.value)}
+                    className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
+                  />
                 </div>
               </div>
             </div>
 
-            {/* Save Status & Action */}
-            <div className="p-4 bg-white rounded-2xl border border-[#E2E8F0] flex items-center justify-between">
-              <span className="text-xs text-[#64748B]">
+            {/* Sticky Save Changes Bar */}
+            <div className="bg-white rounded-2xl border border-[#E2E8F0] p-4 flex items-center justify-between shadow-xs">
+              <div className="text-xs text-[#64748B]">
                 {savedToast ? (
                   <span className="text-[#059669] font-bold flex items-center gap-1">
-                    <Check size={14} /> Changes saved!
+                    <Check size={14} /> Profile updated successfully!
                   </span>
                 ) : (
-                  'Unsaved edits will be lost'
+                  <span>Unsaved changes</span>
                 )}
-              </span>
-              <Button onClick={handleSave} variant="primary" size="sm" className="font-bold text-xs shadow-xs">
+              </div>
+              <Button onClick={handleSave} variant="primary" size="sm" isLoading={saving} className="font-bold shadow-xs">
                 Save Changes
               </Button>
             </div>
