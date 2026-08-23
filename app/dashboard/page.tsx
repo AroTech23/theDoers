@@ -15,7 +15,8 @@ import {
   ArrowRight,
   ExternalLink,
   Plus,
-  Loader2
+  Loader2,
+  Image as ImageIcon
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -233,34 +234,54 @@ export default function DashboardPage() {
             {projects.slice(0, 3).map((p) => (
               <div
                 key={p.id}
-                className="bg-white border border-[#E5E7EB] rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:shadow-md transition-shadow"
+                className="bg-white border border-[#E2E8F0] rounded-2xl overflow-hidden shadow-xs flex flex-col justify-between hover:shadow-md hover:border-[#CBD5E1] transition-all group"
               >
-                <div>
-                  <div className="flex items-center justify-between gap-2 mb-3">
-                    <span className="text-[10px] font-bold text-[#4F46E5] uppercase tracking-wider bg-[#EEF2FF] px-2 py-0.5 rounded-md">
-                      {p.category}
-                    </span>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      p.status === 'published' ? 'bg-[#DEF7EC] text-[#03543F]' : 'bg-[#F3F4F6] text-[#4B5563]'
+                {/* Project Image Banner */}
+                <div className="w-full h-44 bg-[#EEF2FF] border-b border-[#E2E8F0] overflow-hidden relative">
+                  {p.image_url ? (
+                    <img
+                      src={p.image_url}
+                      alt={p.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-[#4F46E5]/40">
+                      <ImageIcon size={36} />
+                    </div>
+                  )}
+                  {/* Floating Status Pill */}
+                  <div className="absolute top-3 right-3">
+                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full shadow-2xs backdrop-blur-md ${
+                      p.status === 'published' 
+                        ? 'bg-[#DEF7EC]/90 text-[#03543F] border border-[#BCF0DA]' 
+                        : 'bg-white/90 text-[#4B5563] border border-[#E5E7EB]'
                     }`}>
                       {p.status === 'published' ? '● Published' : '○ Draft'}
                     </span>
                   </div>
+                </div>
 
-                  <h3 className="text-base font-bold text-[#111827] line-clamp-1 mb-1.5">{p.title}</h3>
-                  <p className="text-xs text-[#6B7280] line-clamp-2 leading-relaxed mb-4">
+                <div className="p-5 flex flex-col flex-1 gap-2.5">
+                  {p.category && (
+                    <span className="text-[10px] font-bold text-[#4F46E5] uppercase tracking-wider">
+                      {p.category}
+                    </span>
+                  )}
+
+                  <h3 className="text-base font-bold text-[#111827] line-clamp-1 leading-snug">{p.title}</h3>
+                  <p className="text-xs text-[#6B7280] line-clamp-2 leading-relaxed flex-1">
                     {p.description}
                   </p>
                 </div>
 
-                <div className="pt-3 border-t border-[#F1F5F9] flex items-center justify-between">
-                  <Link href={`/projects/${p.id}`}>
+                <div className="px-5 py-3.5 bg-[#F8FAFC]/50 border-t border-[#F1F5F9] flex items-center justify-between">
+                  <Link href={`/projects/${p.id}?from=dashboard`}>
                     <span className="text-xs font-bold text-[#4F46E5] hover:underline flex items-center gap-1">
-                      View Project <ExternalLink size={12} />
+                      View Case Study <ExternalLink size={12} />
                     </span>
                   </Link>
                   <Link href={`/dashboard/projects/new?edit=${p.id}`}>
-                    <Button variant="outline" size="sm" className="text-xs font-bold">
+                    <Button variant="outline" size="sm" className="text-xs font-bold bg-white">
                       Edit
                     </Button>
                   </Link>

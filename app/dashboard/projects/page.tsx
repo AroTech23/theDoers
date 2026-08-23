@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
-import { Plus, Search, MoreHorizontal, AlertTriangle, FolderKanban, Loader2, ExternalLink } from 'lucide-react'
+import { Plus, Search, MoreHorizontal, AlertTriangle, FolderKanban, Loader2, ExternalLink, Image as ImageIcon } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -137,28 +137,52 @@ export default function ProjectsPage() {
           {filteredProjects.map((project) => (
             <div
               key={project.id}
-              className="bg-white border border-[#E5E7EB] rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:shadow-md transition-shadow"
+              className="bg-white border border-[#E2E8F0] rounded-2xl overflow-hidden shadow-xs flex flex-col justify-between hover:shadow-md hover:border-[#CBD5E1] transition-all group"
             >
-              <div>
-                <div className="flex items-center justify-between gap-2 mb-3">
-                  <span className="text-[10px] font-bold text-[#4F46E5] uppercase tracking-wider bg-[#EEF2FF] px-2.5 py-1 rounded-lg">
-                    {project.category || 'General Engineering'}
-                  </span>
-                  <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
-                    project.status === 'published' ? 'bg-[#DEF7EC] text-[#03543F]' : 'bg-[#F3F4F6] text-[#4B5563]'
+              {/* Project Image Banner */}
+              <div className="w-full h-44 bg-[#EEF2FF] border-b border-[#E2E8F0] overflow-hidden relative">
+                {project.image_url ? (
+                  <img
+                    src={project.image_url}
+                    alt={project.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-[#4F46E5]/40">
+                    <ImageIcon size={36} />
+                  </div>
+                )}
+                {/* Floating Status Pill */}
+                <div className="absolute top-3 right-3">
+                  <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full shadow-2xs backdrop-blur-md ${
+                    project.status === 'published' 
+                      ? 'bg-[#DEF7EC]/90 text-[#03543F] border border-[#BCF0DA]' 
+                      : 'bg-white/90 text-[#4B5563] border border-[#E5E7EB]'
                   }`}>
                     {project.status === 'published' ? '● Published' : '○ Draft'}
                   </span>
                 </div>
+              </div>
 
-                <h3 className="text-base font-bold text-[#111827] line-clamp-1 mb-1.5">{project.title}</h3>
-                <p className="text-xs text-[#6B7280] line-clamp-3 leading-relaxed mb-4">
+              {/* Card Body */}
+              <div className="p-5 flex flex-col flex-1 gap-2.5">
+                {project.category && (
+                  <span className="text-[10px] font-bold text-[#4F46E5] uppercase tracking-wider">
+                    {project.category}
+                  </span>
+                )}
+
+                <h3 className="text-base font-bold text-[#111827] line-clamp-1 leading-snug">
+                  {project.title}
+                </h3>
+                
+                <p className="text-xs text-[#6B7280] line-clamp-2 leading-relaxed flex-1">
                   {project.description}
                 </p>
 
                 {/* Tech Tags */}
                 {project.tags && project.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mb-4">
+                  <div className="flex flex-wrap gap-1.5 pt-2 border-t border-[#F1F5F9]">
                     {project.tags.slice(0, 3).map((tag: string) => (
                       <span key={tag} className="text-[10px] font-semibold bg-[#F8FAFC] border border-[#E2E8F0] px-2 py-0.5 rounded-md text-[#475569]">
                         {tag}
@@ -173,14 +197,15 @@ export default function ProjectsPage() {
                 )}
               </div>
 
-              <div className="pt-3 border-t border-[#F1F5F9] flex items-center justify-between">
+              {/* Card Footer Actions */}
+              <div className="px-5 py-3.5 bg-[#F8FAFC]/50 border-t border-[#F1F5F9] flex items-center justify-between">
                 <Link href={`/projects/${project.id}?from=dashboard`}>
                   <span className="text-xs font-bold text-[#4F46E5] hover:underline flex items-center gap-1">
                     View Case Study <ExternalLink size={12} />
                   </span>
                 </Link>
                 <Link href={`/dashboard/projects/new?edit=${project.id}`}>
-                  <Button variant="outline" size="sm" className="text-xs font-bold">
+                  <Button variant="outline" size="sm" className="text-xs font-bold bg-white">
                     Edit
                   </Button>
                 </Link>
