@@ -1,31 +1,44 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import DoerCard from '@/components/doers/DoerCard'
 import { Search, SlidersHorizontal, X, ArrowLeft, Loader2, Users } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { MOCK_DOERS } from '@/lib/mockData'
 
-export default function ExploreDoersPage() {
-  const supabase = createClient()
+const programs = [
+  'All Programs',
+  'Computer Science',
+  'Software Engineering',
+  'Information Systems',
+  'Data Science',
+  'UX Design',
+  'Cybersecurity'
+]
 
-  const [loading, setLoading] = useState(true)
+const years = ['All Years', 'Year 1', 'Year 2', 'Year 3', 'Year 4']
+
+function ExploreDoersContent() {
+  const searchParams = useSearchParams()
+  const skillParam = searchParams.get('skill')
+  const queryParam = searchParams.get('q')
+
+  const supabase = createClient()
   const [doers, setDoers] = useState<any[]>([])
-  const [searchQuery, setSearchQuery] = useState('')
+  const [loading, setLoading] = useState(true)
+
+  const [searchQuery, setSearchQuery] = useState(queryParam || '')
   const [selectedProgram, setSelectedProgram] = useState('All Programs')
   const [selectedYear, setSelectedYear] = useState('All Years')
-  const [selectedSkill, setSelectedSkill] = useState<string | null>(null)
-
-  const programs = ['All Programs', 'Computer Science', 'Software Engineering', 'Data Science & AI', 'Interactive Design & HCI', 'Cybersecurity', 'Information Systems']
-  const years = ['All Years', 'Year 1', 'Year 2', 'Year 3', 'Year 4', "Master's"]
+  const [selectedSkill, setSelectedSkill] = useState<string | null>(skillParam || null)
 
   useEffect(() => {
     async function loadDoers() {
       try {
         setLoading(true)
-        // 1. Fetch all approved doers from Supabase
-        const { data: dbUsers } = await supabase
+        const { data: dbUsers, error } = await supabase
           .from('users')
           .select('*, doer_skills(skill:skills(name)), projects(id)')
           .eq('role', 'doer')
@@ -33,7 +46,7 @@ export default function ExploreDoersPage() {
           .order('created_at', { ascending: false })
 
         if (dbUsers && dbUsers.length > 0) {
-          const formatted = dbUsers.map(u => ({
+          const formatted = dbUsers.map((u: any) => ({
             ...u,
             skills: (u.doer_skills || []).map((ds: any) => ({ name: ds.skill?.name })).filter((s: any) => s.name),
             projects_count: (u.projects || []).length
@@ -43,7 +56,7 @@ export default function ExploreDoersPage() {
           setDoers(MOCK_DOERS)
         }
       } catch (err) {
-        console.error('Error loading doers:', err)
+        console.error('Error fetching doers:', err)
         setDoers(MOCK_DOERS)
       } finally {
         setLoading(false)
@@ -102,49 +115,61 @@ export default function ExploreDoersPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-10 w-full flex flex-col gap-6">
+    <div className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10 flex flex-col gap-6 sm:gap-8">
       {/* Previous / Back Navigation */}
       <div>
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-xs font-bold text-[#4F46E5] hover:text-[#3730A3] transition-colors bg-[#EEF2FF] px-3.5 py-2 rounded-xl"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#4F46E5] hover:text-[#3730A3] transition-colors bg-[#EEF2FF] px-3.5 py-1.5 rounded-xl shadow-2xs"
         >
-          <ArrowLeft size={16} /> Back to Home
+          <ArrowLeft size={14} /> Back to Home
         </Link>
       </div>
 
       {/* Header */}
       <div className="max-w-2xl">
-        <h1 className="text-4xl font-bold text-[#111827]">Explore Doers</h1>
-        <p className="mt-2 text-base text-[#6B7280]">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-[#0F172A] tracking-tight">Explore Doers</h1>
+        <p className="mt-1.5 text-xs sm:text-sm text-[#64748B] leading-relaxed">
           Discover talented student engineers by their verified skills, programs, and proof of work.
         </p>
       </div>
 
-      {/* Filter Controls Bar */}
-      <div className="bg-white border border-[#E5E7EB] rounded-2xl p-6 mb-8 shadow-sm flex flex-col gap-5">
-        {/* Search input */}
-        <div className="relative w-full">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9CA3AF]" size={18} />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search Doers by name, skill, degree..."
-            className="w-full pl-10 pr-4 py-2.5 border border-[#E5E7EB] rounded-xl text-sm text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:border-transparent"
-          />
+      {/* ── CLEAN PROMINENT SEARCH BAR (OUTSIDE) ── */}
+      <div className="relative w-full">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]" size={18} />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search Doers by name, technical skills, program, or keywords..."
+          className="w-full pl-11 pr-10 py-3 bg-white border border-[#E2E8F0] rounded-2xl text-xs sm:text-sm text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#4F46E5] shadow-xs hover:border-[#CBD5E1] transition-all"
+        />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery('')}
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#0F172A] p-1 rounded-lg transition-colors cursor-pointer"
+          >
+            <X size={15} />
+          </button>
+        )}
+      </div>
+
+      {/* ── FILTER CHIPS & DROPDOWNS BAR ── */}
+      <div className="bg-white border border-[#E2E8F0] rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col gap-4">
+        <div className="flex items-center gap-2 pb-2 border-b border-[#F1F5F9] text-xs font-bold text-[#0F172A]">
+          <SlidersHorizontal size={14} className="text-[#4F46E5]" />
+          <span>Filter by Category &amp; Academic Year</span>
         </div>
 
-        {/* Dropdowns */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div>
-            <label className="block text-xs font-semibold text-[#6B7280] mb-1.5 uppercase tracking-wider">
-              Program / Field
+            <label className="block text-[11px] font-bold text-[#64748B] mb-1 uppercase tracking-wider">
+              Program / Discipline
             </label>
             <select
               value={selectedProgram}
               onChange={(e) => setSelectedProgram(e.target.value)}
-              className="w-full px-3.5 py-2 bg-white border border-[#E5E7EB] rounded-xl text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
+              className="w-full px-3.5 py-2 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-xs font-medium text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition-all cursor-pointer"
             >
               {programs.map((p) => (
                 <option key={p} value={p}>{p}</option>
@@ -153,13 +178,13 @@ export default function ExploreDoersPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[#6B7280] mb-1.5 uppercase tracking-wider">
+            <label className="block text-[11px] font-bold text-[#64748B] mb-1 uppercase tracking-wider">
               Year of Study
             </label>
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
-              className="w-full px-3.5 py-2 bg-white border border-[#E5E7EB] rounded-xl text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
+              className="w-full px-3.5 py-2 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-xs font-medium text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:bg-white transition-all cursor-pointer"
             >
               {years.map((y) => (
                 <option key={y} value={y}>{y}</option>
@@ -168,11 +193,11 @@ export default function ExploreDoersPage() {
           </div>
         </div>
 
-        {/* Active Filters / Reset */}
+        {/* Active Filter Pill Status / Reset Action */}
         {hasActiveFilters && (
-          <div className="flex items-center justify-between pt-2 border-t border-[#F3F4F6]">
-            <span className="text-xs text-[#6B7280]">
-              Showing <strong className="text-[#111827]">{filteredDoers.length}</strong> matching students
+          <div className="flex items-center justify-between pt-2 border-t border-[#F1F5F9]">
+            <span className="text-xs text-[#64748B]">
+              Showing <strong className="text-[#0F172A] font-bold">{filteredDoers.length}</strong> matching students
             </span>
             <button
               onClick={handleClearFilters}
@@ -186,20 +211,36 @@ export default function ExploreDoersPage() {
 
       {/* Grid of Real Doers */}
       {filteredDoers.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
           {filteredDoers.map((doer) => (
             <DoerCard key={doer.id} doer={doer} />
           ))}
         </div>
       ) : (
         <div className="bg-white rounded-3xl border border-dashed border-[#CBD5E1] p-12 text-center flex flex-col items-center gap-3">
-          <Users size={32} className="text-[#4F46E5]" />
-          <h3 className="text-xl font-bold text-[#0F172A]">No students found</h3>
+          <div className="w-12 h-12 rounded-2xl bg-[#EEF2FF] text-[#4F46E5] flex items-center justify-center">
+            <Users size={24} />
+          </div>
+          <h3 className="text-lg font-bold text-[#0F172A]">No students found</h3>
           <p className="text-xs sm:text-sm text-[#64748B] max-w-md">
             No approved students matched your search criteria. Try clearing your filters or searching for another skill.
           </p>
+          <button
+            onClick={handleClearFilters}
+            className="mt-2 px-4 py-2 bg-[#4F46E5] text-white text-xs font-bold rounded-xl shadow-xs hover:bg-[#4338CA] transition-colors cursor-pointer"
+          >
+            Reset Filters
+          </button>
         </div>
       )}
     </div>
+  )
+}
+
+export default function ExploreDoersPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#F8FAFC]" />}>
+      <ExploreDoersContent />
+    </Suspense>
   )
 }
