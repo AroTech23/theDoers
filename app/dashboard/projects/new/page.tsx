@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   ArrowLeft, 
   Cloud, 
@@ -21,10 +22,11 @@ import {
   AlertCircle,
   CheckCircle2,
   TrendingUp,
-  Download
+  Loader2
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
+import { createClient } from '@/lib/supabase/client';
 
 const STEPS = [
   'Project Basics',
@@ -33,8 +35,16 @@ const STEPS = [
   'Review & Publish'
 ];
 
-export default function CreateProjectPage() {
+function CreateProjectWizard() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get('edit');
+  const supabase = createClient();
+
   const [currentStep, setCurrentStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
   // Step 1: Basics
   const [title, setTitle] = useState('');
@@ -43,6 +53,7 @@ export default function CreateProjectPage() {
   const [market, setMarket] = useState('Education / EdTech');
   const [tags, setTags] = useState<string[]>(['React', 'TypeScript', 'Node.js']);
   const [tagInput, setTagInput] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
   
   // Step 2: Story
   const [problem, setProblem] = useState('');
@@ -50,8 +61,8 @@ export default function CreateProjectPage() {
   const [desiredState, setDesiredState] = useState('');
   const [solution, setSolution] = useState('');
   const [result, setResult] = useState('');
-  const [metricValue, setMetricValue] = useState('');
-  const [metricDesc, setMetricDesc] = useState('');
+  const [metricValue, setMetricValue] = useState('40%');
+  const [metricDesc, setMetricDesc] = useState('Reduction in processing latency');
   const [processSteps, setProcessSteps] = useState([
     { id: 1, title: 'Architecture & System Design', description: 'Defined the system boundaries, data flow, and core technology stack.' }
   ]);
@@ -60,14 +71,65 @@ export default function CreateProjectPage() {
   const [liveUrl, setLiveUrl] = useState('');
   const [githubUrl, setGithubUrl] = useState('');
   const [docUrl, setDocUrl] = useState('');
-  const [hasPdfUploaded, setHasPdfUploaded] = useState(true);
-  const [pdfFileName, setPdfFileName] = useState('project-architecture-documentation.pdf');
+
+  // Load existing project if in edit mode
+  useEffect(() => {
+    async function loadProjectForEdit() {
+      if (!editId) return;
+      try {
+        setLoading(true);
+        const { data: project, error } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('id', editId)
+          .maybeSingle();
+
+        if (project) {
+          setTitle(project.title || '');
+          setShortDescription(project.description || '');
+          setCategory(project.category || 'AI / Machine Learning');
+          setMarket(project.market || 'Education / EdTech');
+          setTags(project.tags || []);
+          setImageUrl(project.image_url || '');
+          setProblem(project.problem || '');
+          setCurrentState(project.current_state || '');
+          setDesiredState(project.desired_state || '');
+          setSolution(project.solution || '');
+          setResult(project.result || '');
+          if (project.key_metric) {
+            setMetricValue(project.key_metric.value || '');
+            setMetricDesc(project.key_metric.label || '');
+          }
+          if (project.process_steps && Array.isArray(project.process_steps)) {
+            setProcessSteps(project.process_steps);
+          }
+          setLiveUrl(project.live_url || '');
+          setGithubUrl(project.github_url || '');
+          setDocUrl(project.doc_url || '');
+        }
+      } catch (err) {
+        console.error('Error loading project for edit:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadProjectForEdit();
+  }, [editId, supabase]);
 
   const handleNext = () => {
+    setErrorMessage(null);
+    if (currentStep === 1) {
+      if (!title.trim() || !shortDescription.trim()) {
+        setErrorMessage('Please fill in the project title and short description.');
+        return;
+      }
+    }
     if (currentStep < 4) setCurrentStep(currentStep + 1);
   };
 
   const handleBack = () => {
+    setErrorMessage(null);
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
@@ -98,44 +160,125 @@ export default function CreateProjectPage() {
     }
   };
 
+  const updateProcessStep = (id: number, field: 'title' | 'description', value: string) => {
+    setProcessSteps(processSteps.map(s => s.id === id ? { ...s, [field]: value } : s));
+  };
+
+  const handleSaveProject = async (targetStatus: 'published' | 'draft') => {
+    setSaving(true);
+    setErrorMessage(null);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('You must be logged in to create a project.');
+
+      const projectData = {
+        doer_id: user.id,
+        title: title.trim() || 'Untitled Project',
+        description: shortDescription.trim() || 'No description provided.',
+        category,
+        market,
+        tags,
+        image_url: imageUrl.trim() || null,
+        problem: problem.trim() || null,
+        current_state: currentState.trim() || null,
+        desired_state: desiredState.trim() || null,
+        solution: solution.trim() || null,
+        result: result.trim() || null,
+        key_metric: metricValue ? { value: metricValue, label: metricDesc } : null,
+        process_steps: processSteps,
+        live_url: liveUrl.trim() || null,
+        github_url: githubUrl.trim() || null,
+        doc_url: docUrl.trim() || null,
+        status: targetStatus
+      };
+
+      if (editId) {
+        const { error } = await supabase
+          .from('projects')
+          .update(projectData)
+          .eq('id', editId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('projects')
+          .insert(projectData);
+        if (error) throw error;
+      }
+
+      router.push('/dashboard/projects');
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Failed to save project.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3">
+        <Loader2 size={32} className="animate-spin text-[#4F46E5]" />
+        <p className="text-xs font-bold text-[#64748B]">Loading project details...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-28 pt-6">
-      <div className="max-w-4xl mx-auto px-6 md:px-8">
+    <div className="min-h-screen bg-[#F8FAFC] pb-32 pt-6">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
         
-        {/* Header & Status */}
-        <div className="flex items-center justify-between mb-6">
-          <Link href="/dashboard/projects" className="inline-flex items-center gap-1.5 text-xs font-bold text-[#64748B] hover:text-[#0F172A] transition-colors bg-white border border-[#E2E8F0] px-3.5 py-1.5 rounded-xl shadow-2xs">
-            <ArrowLeft size={14} /> Back to Projects
-          </Link>
-          <div className="flex items-center gap-1.5 text-xs font-medium text-[#64748B] bg-white border border-[#E2E8F0] px-3 py-1.5 rounded-xl shadow-2xs">
+        {/* Navigation & Header */}
+        <div className="flex justify-between items-center mb-6 pb-4 border-b border-[#E2E8F0]">
+          <div>
+            <Link 
+              href="/dashboard/projects"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#64748B] hover:text-[#0F172A] transition-colors mb-1.5"
+            >
+              <ArrowLeft size={14} /> Back to Projects
+            </Link>
+            <h1 className="text-2xl font-extrabold text-[#0F172A] tracking-tight">
+              {editId ? 'Edit Engineering Case Study' : 'Create Engineering Case Study'}
+            </h1>
+          </div>
+          
+          <div className="flex items-center gap-2 text-xs font-semibold text-[#64748B] bg-white border border-[#E2E8F0] px-3 py-1.5 rounded-xl shadow-2xs">
             <Cloud size={14} className="text-[#4F46E5]" />
-            <span>Draft · Saved automatically</span>
+            <span>Draft Auto-Save</span>
           </div>
         </div>
 
-        <div className="mb-8">
-          <h1 className="text-3xl font-extrabold text-[#0F172A] tracking-tight">Create Project Case Study</h1>
-          <p className="text-xs sm:text-sm text-[#64748B] mt-1">Structure your project story, engineering process, and verifiable deliverables.</p>
-        </div>
+        {/* Global Error Banner */}
+        {errorMessage && (
+          <div className="mb-6 p-4 rounded-2xl bg-[#FEF2F2] border border-[#FCA5A5] flex items-center gap-3 text-xs font-semibold text-[#B91C1C]">
+            <AlertCircle size={18} className="shrink-0 text-[#EF4444]" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
 
-        {/* Step Indicator Progress Bar */}
-        <div className="flex items-center justify-between mb-10 relative">
-          <div className="absolute left-0 top-1/2 w-full h-0.5 bg-[#E2E8F0] -z-10 transform -translate-y-1/2" />
-          {STEPS.map((step, index) => {
-            const stepNum = index + 1;
+        {/* Wizard Step Progress */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-8">
+          {STEPS.map((step, idx) => {
+            const stepNum = idx + 1;
             const isActive = currentStep === stepNum;
             const isCompleted = currentStep > stepNum;
-
             return (
-              <div key={stepNum} className="flex flex-col items-center bg-[#F8FAFC] px-3">
-                <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-extrabold mb-1.5 transition-all shadow-2xs ${
-                  isActive ? 'bg-[#4F46E5] text-white ring-4 ring-[#EEF2FF]' : 
-                  isCompleted ? 'bg-[#0F172A] text-white' : 
-                  'bg-white border border-[#CBD5E1] text-[#64748B]'
+              <div 
+                key={step}
+                onClick={() => isCompleted && setCurrentStep(stepNum)}
+                className={`flex items-center gap-2 p-3 rounded-2xl border transition-all ${
+                  isActive ? 'bg-white border-[#4F46E5] ring-2 ring-[#EEF2FF] shadow-xs' :
+                  isCompleted ? 'bg-white border-[#CBD5E1] cursor-pointer hover:border-[#94A3B8]' :
+                  'bg-[#F1F5F9] border-transparent opacity-60'
+                }`}
+              >
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                  isActive ? 'bg-[#4F46E5] text-white' :
+                  isCompleted ? 'bg-[#0F172A] text-white' :
+                  'bg-[#E2E8F0] text-[#64748B]'
                 }`}>
-                  {isCompleted ? <Check size={16} /> : stepNum}
+                  {isCompleted ? <Check size={12} /> : stepNum}
                 </div>
-                <span className={`text-xs font-semibold ${isActive ? 'text-[#4F46E5] font-bold' : isCompleted ? 'text-[#0F172A]' : 'text-[#64748B]'}`}>
+                <span className={`text-xs truncate ${isActive ? 'font-bold text-[#0F172A]' : 'font-medium text-[#64748B]'}`}>
                   {step}
                 </span>
               </div>
@@ -145,48 +288,46 @@ export default function CreateProjectPage() {
 
         {/* ── STEP 1: PROJECT BASICS ── */}
         {currentStep === 1 && (
-          <div className="bg-white rounded-3xl border border-[#E2E8F0] p-8 shadow-xs space-y-6">
+          <div className="bg-white rounded-3xl border border-[#E2E8F0] p-6 sm:p-8 shadow-xs space-y-6">
             <div className="border-b border-[#F1F5F9] pb-4">
               <h2 className="text-xl font-bold text-[#0F172A]">1. Project Basics</h2>
               <p className="text-xs text-[#64748B] mt-0.5">Start with a strong title, category, and descriptive summary.</p>
             </div>
             
-            <div className="space-y-6">
+            <div className="space-y-5">
               <div>
                 <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5">Project Title *</label>
                 <input 
                   type="text" 
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. AI-Powered Study Assistant" 
-                  className="w-full rounded-xl border border-[#E2E8F0] px-4 py-2.5 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]" 
+                  placeholder="e.g. AI-Powered Distributed Cache System" 
+                  className="w-full rounded-xl border border-[#E2E8F0] px-4 py-2.5 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]" 
                 />
-                <p className="text-[11px] text-[#64748B] mt-1">Keep it short, clear, and descriptive.</p>
               </div>
 
               <div>
                 <div className="flex justify-between items-center mb-1.5">
                   <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider">Short Description *</label>
-                  <span className="text-[11px] text-[#64748B]">{shortDescription.length}/160</span>
+                  <span className="text-[10px] text-[#64748B]">{shortDescription.length}/160</span>
                 </div>
                 <textarea 
                   rows={3} 
                   maxLength={160}
                   value={shortDescription}
                   onChange={(e) => setShortDescription(e.target.value)}
-                  placeholder="A one or two sentence overview of what this project does and why it matters..." 
-                  className="w-full rounded-xl border border-[#E2E8F0] px-4 py-2.5 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
-                ></textarea>
-                <p className="text-[11px] text-[#64748B] mt-0.5">This appears on project cards across the platform and home page.</p>
+                  placeholder="A concise overview of what this project does, why you built it, and its core benefit..." 
+                  className="w-full rounded-xl border border-[#E2E8F0] px-4 py-2.5 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]" 
+                />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5">Category *</label>
                   <select 
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
-                    className="w-full rounded-xl border border-[#E2E8F0] px-4 py-2.5 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5] bg-white"
+                    className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5] bg-white"
                   >
                     <option>AI / Machine Learning</option>
                     <option>Web Development</option>
@@ -194,16 +335,16 @@ export default function CreateProjectPage() {
                     <option>IoT & Embedded</option>
                     <option>Data Science</option>
                     <option>Cybersecurity</option>
-                    <option>UI/UX Design</option>
+                    <option>Cloud Infrastructure</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5">Market / Space *</label>
+                  <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5">Market / Problem Space *</label>
                   <select 
                     value={market}
                     onChange={(e) => setMarket(e.target.value)}
-                    className="w-full rounded-xl border border-[#E2E8F0] px-4 py-2.5 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5] bg-white"
+                    className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5] bg-white"
                   >
                     <option>Education / EdTech</option>
                     <option>Smart Home / IoT</option>
@@ -217,7 +358,7 @@ export default function CreateProjectPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5">Skills &amp; Technologies *</label>
+                <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5">Skills &amp; Technologies Used ({tags.length}/10)</label>
                 <div className="p-2.5 flex flex-wrap gap-2 rounded-xl border border-[#E2E8F0] focus-within:ring-2 focus-within:ring-[#4F46E5] bg-white">
                   {tags.map((tag, i) => (
                     <span key={i} className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#EEF2FF] text-[#4F46E5] border border-[#C7D2FE]">
@@ -232,188 +373,138 @@ export default function CreateProjectPage() {
                     value={tagInput}
                     onChange={(e) => setTagInput(e.target.value)}
                     onKeyDown={addTag}
-                    placeholder="Type skill & press Enter (e.g. Python, Docker)"
-                    className="flex-1 min-w-[150px] outline-none text-[#0F172A] text-xs py-1"
+                    placeholder="Type technology & press Enter (e.g. Docker, Rust)..."
+                    className="flex-1 min-w-[160px] outline-none text-[#0F172A] text-xs py-1"
                   />
                 </div>
-                <p className="text-[11px] text-[#64748B] mt-1">Add up to 10 tags representing your tech stack.</p>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5">Project Cover Image *</label>
-                <div className="flex justify-center rounded-2xl border-2 border-dashed border-[#CBD5E1] bg-[#F8FAFC] px-6 py-8 hover:bg-[#EEF2FF]/40 hover:border-[#4F46E5] transition-all cursor-pointer">
-                  <div className="text-center flex flex-col items-center">
-                    <Upload className="h-10 w-10 text-[#4F46E5] mb-2" />
-                    <span className="text-xs font-bold text-[#4F46E5]">Click to upload project cover image</span>
-                    <p className="text-[11px] text-[#64748B] mt-1">JPG, PNG or WEBP · 16:9 recommended · Max 10 MB</p>
-                  </div>
-                </div>
+                <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5">Cover Image URL (Optional)</label>
+                <input 
+                  type="url" 
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  placeholder="https://images.unsplash.com/... or leave blank for dynamic banner" 
+                  className="w-full rounded-xl border border-[#E2E8F0] px-4 py-2.5 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]" 
+                />
               </div>
             </div>
           </div>
         )}
 
-        {/* ── STEP 2: THE PROJECT STORY (Framework: Problem, Process, Solution, Result) ── */}
+        {/* ── STEP 2: PROJECT STORY ── */}
         {currentStep === 2 && (
-          <div className="bg-white rounded-3xl border border-[#E2E8F0] p-8 shadow-xs space-y-6">
+          <div className="bg-white rounded-3xl border border-[#E2E8F0] p-6 sm:p-8 shadow-xs space-y-6">
             <div className="border-b border-[#F1F5F9] pb-4">
-              <h2 className="text-xl font-bold text-[#0F172A]">2. Project Story &amp; Case Study</h2>
-              <p className="text-xs text-[#64748B] mt-0.5">Tell the engineering story behind your work so recruiters understand your thought process.</p>
-              
-              <div className="flex flex-wrap gap-2 text-xs font-bold text-[#64748B] mt-4 bg-[#F8FAFC] p-3 rounded-xl border border-[#E2E8F0]">
-                <span className="text-[#EF4444]">1. Problem</span> → 
-                <span>2. Current State</span> → 
-                <span className="text-[#4F46E5]">3. Process</span> → 
-                <span className="text-[#10B981]">4. Solution</span> → 
-                <span className="text-[#7C3AED]">5. Result &amp; Metrics</span>
-              </div>
+              <h2 className="text-xl font-bold text-[#0F172A]">2. The Engineering Story</h2>
+              <p className="text-xs text-[#64748B] mt-0.5">Structure your problem-to-solution narrative for engineering recruiters.</p>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-5">
               <div>
-                <label className="block text-xs font-bold text-[#EF4444] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                  <AlertCircle size={14} /> The Problem *
-                </label>
+                <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5">The Problem *</label>
                 <textarea 
                   rows={3} 
                   value={problem}
                   onChange={(e) => setProblem(e.target.value)}
-                  placeholder="Describe the real friction or inefficiency you identified before writing any code..."
-                  className="w-full rounded-xl border border-[#E2E8F0] px-4 py-2.5 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
-                ></textarea>
+                  placeholder="What specific engineering friction, latency bottleneck, or real-world problem did you set out to solve?" 
+                  className="w-full rounded-xl border border-[#E2E8F0] px-4 py-2.5 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]" 
+                />
               </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5">Current / Baseline State</label>
+                  <textarea 
+                    rows={2} 
+                    value={currentState}
+                    onChange={(e) => setCurrentState(e.target.value)}
+                    placeholder="How was this handled previously before your tool?" 
+                    className="w-full rounded-xl border border-[#E2E8F0] px-4 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]" 
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5">Desired State / Goal</label>
+                  <textarea 
+                    rows={2} 
+                    value={desiredState}
+                    onChange={(e) => setDesiredState(e.target.value)}
+                    placeholder="What target speed, accuracy, or metric did you aim for?" 
+                    className="w-full rounded-xl border border-[#E2E8F0] px-4 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]" 
+                  />
+                </div>
+              </div>
+
+              {/* Dynamic Process Steps */}
               <div>
-                <label className="block text-xs font-bold text-[#64748B] uppercase tracking-wider mb-1.5">
-                  Current State &amp; Inefficiencies (Optional)
-                </label>
-                <textarea 
-                  rows={2} 
-                  value={currentState}
-                  onChange={(e) => setCurrentState(e.target.value)}
-                  placeholder="How were people or systems handling this problem previously?"
-                  className="w-full rounded-xl border border-[#E2E8F0] px-4 py-2.5 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
-                ></textarea>
-              </div>
-
-              {/* Engineering Process Steps */}
-              <div className="space-y-3">
-                <label className="block text-xs font-bold text-[#4F46E5] uppercase tracking-wider flex items-center gap-1.5">
-                  <Layers size={14} /> Engineering Process (Step by Step) *
-                </label>
-                <p className="text-[11px] text-[#64748B]">Break down the key implementation stages of your build.</p>
-
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider">Engineering Process Steps</label>
+                  <button type="button" onClick={addProcessStep} className="text-xs font-bold text-[#4F46E5] hover:underline cursor-pointer">
+                    + Add Step
+                  </button>
+                </div>
                 <div className="space-y-3">
-                  {processSteps.map((step, index) => (
-                    <div key={step.id} className="p-4 rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] relative space-y-2">
+                  {processSteps.map((step, idx) => (
+                    <div key={step.id} className="p-3.5 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-extrabold text-[#4F46E5] uppercase tracking-wider">Step {index + 1}</span>
+                        <span className="text-[11px] font-bold text-[#4F46E5]">Step {idx + 1}</span>
                         {processSteps.length > 1 && (
-                          <button 
-                            type="button" 
-                            onClick={() => removeProcessStep(step.id)}
-                            className="text-[#94A3B8] hover:text-red-600 transition-colors p-1"
-                            title="Remove step"
-                          >
-                            <Trash2 size={14} />
+                          <button type="button" onClick={() => removeProcessStep(step.id)} className="text-[#94A3B8] hover:text-[#EF4444]">
+                            <Trash2 size={13} />
                           </button>
                         )}
                       </div>
                       <input 
-                        type="text" 
+                        type="text"
+                        placeholder="Step Title (e.g. Database Schema Normalization)"
                         value={step.title}
-                        onChange={(e) => {
-                          const updated = [...processSteps];
-                          updated[index].title = e.target.value;
-                          setProcessSteps(updated);
-                        }}
-                        placeholder="Stage title (e.g. Data Pipeline & Embedding Index)" 
-                        className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs font-bold text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5] bg-white" 
+                        onChange={(e) => updateProcessStep(step.id, 'title', e.target.value)}
+                        className="w-full rounded-xl border border-[#E2E8F0] px-3 py-1.5 text-xs text-[#0F172A] bg-white focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
                       />
                       <textarea 
-                        rows={2} 
+                        rows={2}
+                        placeholder="Describe what you engineered in this phase..."
                         value={step.description}
-                        onChange={(e) => {
-                          const updated = [...processSteps];
-                          updated[index].description = e.target.value;
-                          setProcessSteps(updated);
-                        }}
-                        placeholder="Explain what tools you chose and what was implemented in this stage..." 
-                        className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5] bg-white"
-                      ></textarea>
+                        onChange={(e) => updateProcessStep(step.id, 'description', e.target.value)}
+                        className="w-full rounded-xl border border-[#E2E8F0] px-3 py-1.5 text-xs text-[#0F172A] bg-white focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
+                      />
                     </div>
                   ))}
                 </div>
-
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full text-xs font-bold border-dashed border-[#CBD5E1] text-[#4F46E5] hover:bg-[#EEF2FF]"
-                  onClick={addProcessStep}
-                >
-                  + Add Another Process Step
-                </Button>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#10B981] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                  <CheckCircle2 size={14} /> The Solution *
-                </label>
+                <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5">The Solution *</label>
                 <textarea 
                   rows={3} 
                   value={solution}
                   onChange={(e) => setSolution(e.target.value)}
-                  placeholder="Focus on what you built, the key architecture decisions, and why it solves the core problem..."
-                  className="w-full rounded-xl border border-[#E2E8F0] px-4 py-2.5 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
-                ></textarea>
+                  placeholder="Explain how your solution works under the hood..." 
+                  className="w-full rounded-xl border border-[#E2E8F0] px-4 py-2.5 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]" 
+                />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-[#64748B] uppercase tracking-wider mb-1.5">
-                  Target Outcome Achieved (Optional)
-                </label>
-                <textarea 
-                  rows={2} 
-                  value={desiredState}
-                  onChange={(e) => setDesiredState(e.target.value)}
-                  placeholder="What was the intended target state once the solution was deployed?"
-                  className="w-full rounded-xl border border-[#E2E8F0] px-4 py-2.5 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
-                ></textarea>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-[#7C3AED] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                  <Sparkles size={14} /> The Result &amp; Impact
-                </label>
-                <textarea 
-                  rows={2} 
-                  value={result}
-                  onChange={(e) => setResult(e.target.value)}
-                  placeholder="What were the outcomes, feedback, user test results, or learnings?"
-                  className="w-full rounded-xl border border-[#E2E8F0] px-4 py-2.5 text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
-                ></textarea>
-              </div>
-
-              {/* Key Result Metric */}
-              <div>
-                <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                  <TrendingUp size={14} className="text-[#4F46E5]" /> Key Result Metric (Optional)
-                </label>
-                <div className="flex gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="sm:col-span-1">
+                  <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5">Key Metric Value</label>
                   <input 
                     type="text" 
                     value={metricValue}
                     onChange={(e) => setMetricValue(e.target.value)}
-                    placeholder="Metric Value (e.g. 40%, 28ms, 5K Users)" 
-                    className="w-1/3 rounded-xl border border-[#E2E8F0] px-4 py-2 text-xs font-bold text-[#4F46E5] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]" 
+                    placeholder="e.g. 40%" 
+                    className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]" 
                   />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5">Key Metric Label</label>
                   <input 
                     type="text" 
                     value={metricDesc}
                     onChange={(e) => setMetricDesc(e.target.value)}
-                    placeholder="Metric description (e.g. Reduction in exam prep time)" 
-                    className="flex-1 rounded-xl border border-[#E2E8F0] px-4 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]" 
+                    placeholder="e.g. Latency reduction across API endpoints" 
+                    className="w-full rounded-xl border border-[#E2E8F0] px-3.5 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]" 
                   />
                 </div>
               </div>
@@ -421,102 +512,52 @@ export default function CreateProjectPage() {
           </div>
         )}
 
-        {/* ── STEP 3: VISUALS, LIVE DEMO, CODE & PDF ATTACHMENT ── */}
+        {/* ── STEP 3: VISUALS & RESOURCES ── */}
         {currentStep === 3 && (
-          <div className="bg-white rounded-3xl border border-[#E2E8F0] p-8 shadow-xs space-y-6">
+          <div className="bg-white rounded-3xl border border-[#E2E8F0] p-6 sm:p-8 shadow-xs space-y-6">
             <div className="border-b border-[#F1F5F9] pb-4">
-              <h2 className="text-xl font-bold text-[#0F172A]">3. Visuals &amp; Resources</h2>
-              <p className="text-xs text-[#64748B] mt-0.5">Add project links, source repositories, screenshots, and downloadable documentation.</p>
+              <h2 className="text-xl font-bold text-[#0F172A]">3. Visuals &amp; External Resources</h2>
+              <p className="text-xs text-[#64748B] mt-0.5">Add your repository, live demo, and documentation links.</p>
             </div>
 
-            <div className="space-y-6">
-              {/* Project Links */}
-              <div className="space-y-3">
-                <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider">Project Deliverables &amp; Links</label>
-                
-                <div>
-                  <span className="text-[11px] font-bold text-[#64748B] block mb-1">Live Interactive Demo URL</span>
-                  <div className="relative">
-                    <ExternalLink size={15} className="absolute left-3.5 top-3 text-[#94A3B8]" />
-                    <input 
-                      type="url" 
-                      value={liveUrl}
-                      onChange={(e) => setLiveUrl(e.target.value)}
-                      placeholder="https://myproject-demo.com" 
-                      className="w-full rounded-xl border border-[#E2E8F0] pl-10 pr-4 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]" 
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <span className="text-[11px] font-bold text-[#64748B] block mb-1">GitHub / Code Repository URL</span>
-                  <div className="relative">
-                    <Code2 size={15} className="absolute left-3.5 top-3 text-[#94A3B8]" />
-                    <input 
-                      type="url" 
-                      value={githubUrl}
-                      onChange={(e) => setGithubUrl(e.target.value)}
-                      placeholder="https://github.com/username/project" 
-                      className="w-full rounded-xl border border-[#E2E8F0] pl-10 pr-4 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]" 
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <span className="text-[11px] font-bold text-[#64748B] block mb-1">Public Documentation URL (Optional)</span>
-                  <div className="relative">
-                    <FileText size={15} className="absolute left-3.5 top-3 text-[#94A3B8]" />
-                    <input 
-                      type="url" 
-                      value={docUrl}
-                      onChange={(e) => setDocUrl(e.target.value)}
-                      placeholder="https://docs.myproject.com" 
-                      className="w-full rounded-xl border border-[#E2E8F0] pl-10 pr-4 py-2 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]" 
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Downloadable PDF Documentation Attachment */}
+            <div className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                  <Download size={14} className="text-[#4F46E5]" /> Supporting PDF Documentation
+                <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <Code2 size={14} /> GitHub Repository URL
                 </label>
-                <div className="p-4 rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-[#EEF2FF] text-[#4F46E5] flex items-center justify-center font-bold">
-                      <FileText size={20} />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-[#0F172A]">{pdfFileName}</p>
-                      <p className="text-[10px] text-[#64748B]">PDF Document · Generates downloadable case study</p>
-                    </div>
-                  </div>
-                  <label className="text-xs font-bold text-[#4F46E5] hover:text-[#3730A3] cursor-pointer bg-white px-3 py-1.5 rounded-lg border border-[#E2E8F0] shadow-2xs">
-                    Replace PDF
-                    <input type="file" accept=".pdf" className="sr-only" onChange={(e) => {
-                      if (e.target.files?.[0]) setPdfFileName(e.target.files[0].name);
-                    }} />
-                  </label>
-                </div>
-                <p className="text-[11px] text-[#64748B] mt-1.5">Enables visitors to click &quot;Download PDF&quot; directly on your public case study page.</p>
+                <input 
+                  type="url" 
+                  value={githubUrl}
+                  onChange={(e) => setGithubUrl(e.target.value)}
+                  placeholder="https://github.com/username/project-repo" 
+                  className="w-full rounded-xl border border-[#E2E8F0] px-4 py-2.5 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]" 
+                />
               </div>
 
-              {/* Project Screenshots */}
               <div>
-                <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-2">Project Screenshots &amp; Diagrams</label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="aspect-video bg-[#EEF2FF]/60 border border-[#E2E8F0] rounded-xl flex flex-col justify-center items-center text-[#4F46E5]/40 text-xs">
-                      <ImageIcon size={22} />
-                      <span className="text-[10px] mt-1 font-bold">Screenshot {i}</span>
-                    </div>
-                  ))}
-                  <div className="aspect-video border-2 border-dashed border-[#CBD5E1] bg-[#F8FAFC] rounded-xl flex flex-col justify-center items-center text-[#64748B] cursor-pointer hover:bg-[#EEF2FF] hover:border-[#4F46E5] hover:text-[#4F46E5] transition-all">
-                    <Upload size={18} className="mb-1" />
-                    <span className="text-[11px] font-bold">Add Screenshot</span>
-                  </div>
-                </div>
+                <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <ExternalLink size={14} /> Live Interactive Demo URL
+                </label>
+                <input 
+                  type="url" 
+                  value={liveUrl}
+                  onChange={(e) => setLiveUrl(e.target.value)}
+                  placeholder="https://my-app.vercel.app" 
+                  className="w-full rounded-xl border border-[#E2E8F0] px-4 py-2.5 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]" 
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <FileText size={14} /> Architecture Docs / PDF Link
+                </label>
+                <input 
+                  type="url" 
+                  value={docUrl}
+                  onChange={(e) => setDocUrl(e.target.value)}
+                  placeholder="https://docs.google.com/... or PDF link" 
+                  className="w-full rounded-xl border border-[#E2E8F0] px-4 py-2.5 text-xs text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]" 
+                />
               </div>
             </div>
           </div>
@@ -524,63 +565,38 @@ export default function CreateProjectPage() {
 
         {/* ── STEP 4: REVIEW & PUBLISH ── */}
         {currentStep === 4 && (
-          <div className="space-y-6">
-            <div className="bg-white rounded-3xl border border-[#E2E8F0] p-8 shadow-xs">
-              <div className="flex items-center gap-3 p-4 rounded-2xl bg-[#ECFDF5] border border-[#A7F3D0] mb-8">
-                <CheckCircle2 size={24} className="text-[#059669]" />
-                <div>
-                  <h3 className="text-sm font-bold text-[#065F46]">Your case study structure is complete &amp; verified!</h3>
-                  <p className="text-xs text-[#047857] mt-0.5">All required fields match the public case study display architecture.</p>
+          <div className="bg-white rounded-3xl border border-[#E2E8F0] p-6 sm:p-8 shadow-xs space-y-6">
+            <div className="border-b border-[#F1F5F9] pb-4">
+              <h2 className="text-xl font-bold text-[#0F172A]">4. Review &amp; Publish</h2>
+              <p className="text-xs text-[#64748B] mt-0.5">Review your case study before publishing it to your live portfolio.</p>
+            </div>
+
+            {/* Summary Cards */}
+            <div className="space-y-4 text-xs">
+              <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0]">
+                <span className="font-bold text-[#4F46E5] uppercase tracking-wider block mb-1">Project Summary</span>
+                <p className="text-base font-bold text-[#0F172A]">{title || 'Untitled Project'}</p>
+                <p className="text-[#64748B] mt-1">{shortDescription}</p>
+                <div className="flex flex-wrap gap-1.5 mt-3">
+                  {tags.map(t => <Badge key={t} label={t} className="bg-white border border-[#C7D2FE] text-[#4F46E5] font-bold text-[10px]" />)}
                 </div>
               </div>
 
-              {/* 3 Summary Review Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="border border-[#E2E8F0] rounded-2xl p-5 bg-[#F8FAFC]">
-                  <div className="flex justify-between items-center mb-3">
-                    <span className="text-xs font-bold text-[#0F172A]">1. Basics</span>
-                    <button type="button" className="text-xs font-bold text-[#4F46E5]" onClick={() => setCurrentStep(1)}>✎ Edit</button>
-                  </div>
-                  <ul className="text-xs text-[#64748B] space-y-1.5">
-                    <li><strong className="text-[#0F172A]">Title:</strong> {title || 'AI-Powered Study Assistant'}</li>
-                    <li><strong className="text-[#0F172A]">Category:</strong> {category}</li>
-                    <li><strong className="text-[#0F172A]">Market:</strong> {market}</li>
-                    <li><strong className="text-[#0F172A]">Tags:</strong> {tags.join(', ')}</li>
-                  </ul>
-                </div>
-
-                <div className="border border-[#E2E8F0] rounded-2xl p-5 bg-[#F8FAFC]">
-                  <div className="flex justify-between items-center mb-3">
-                    <span className="text-xs font-bold text-[#0F172A]">2. Story Framework</span>
-                    <button type="button" className="text-xs font-bold text-[#4F46E5]" onClick={() => setCurrentStep(2)}>✎ Edit</button>
-                  </div>
-                  <ul className="text-xs text-[#64748B] space-y-1.5">
-                    <li>Problem &amp; Inefficiencies ✓</li>
-                    <li>{processSteps.length} Engineering Steps ✓</li>
-                    <li>Solution Architecture ✓</li>
-                    <li>Results &amp; Metrics ✓</li>
-                  </ul>
-                </div>
-
-                <div className="border border-[#E2E8F0] rounded-2xl p-5 bg-[#F8FAFC]">
-                  <div className="flex justify-between items-center mb-3">
-                    <span className="text-xs font-bold text-[#0F172A]">3. Deliverables</span>
-                    <button type="button" className="text-xs font-bold text-[#4F46E5]" onClick={() => setCurrentStep(3)}>✎ Edit</button>
-                  </div>
-                  <ul className="text-xs text-[#64748B] space-y-1.5">
-                    <li>Live Demo URL ✓</li>
-                    <li>GitHub Repository ✓</li>
-                    <li>Downloadable PDF ✓</li>
-                  </ul>
+              <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0]">
+                <span className="font-bold text-[#4F46E5] uppercase tracking-wider block mb-1">Narrative Breakdown</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+                  <div><span className="text-[#64748B]">Category:</span> <strong className="text-[#0F172A]">{category}</strong></div>
+                  <div><span className="text-[#64748B]">Market:</span> <strong className="text-[#0F172A]">{market}</strong></div>
+                  <div><span className="text-[#64748B]">Process Steps:</span> <strong className="text-[#0F172A]">{processSteps.length} Steps</strong></div>
+                  <div><span className="text-[#64748B]">Metric:</span> <strong className="text-[#0F172A]">{metricValue} - {metricDesc}</strong></div>
                 </div>
               </div>
             </div>
 
-            {/* Ready to Publish */}
-            <div className="bg-[#EEF2FF] border border-[#C7D2FE] rounded-3xl p-6 text-center space-y-2">
-              <h3 className="text-base font-bold text-[#1E1B4B]">Ready to publish to the network?</h3>
-              <p className="text-xs text-[#4338CA] max-w-lg mx-auto">
-                Once published, your case study will be visible on your public portfolio (<code className="font-mono text-[#312E81]">/doers/alexchen</code>) and indexed across theDoers directory.
+            {/* Ready Card */}
+            <div className="bg-[#EEF2FF] border border-[#C7D2FE] rounded-2xl p-4 text-center">
+              <p className="text-xs font-semibold text-[#4338CA]">
+                Publishing will make this case study immediately visible on your public portfolio page.
               </p>
             </div>
           </div>
@@ -603,23 +619,42 @@ export default function CreateProjectPage() {
             </Button>
           </div>
           <div className="flex items-center gap-3">
-            <Button type="button" variant="outline" className="border-[#E2E8F0] text-[#0F172A] gap-1.5 text-xs font-bold">
+            <Button 
+              type="button" 
+              variant="outline" 
+              isLoading={saving}
+              onClick={() => handleSaveProject('draft')}
+              className="border-[#E2E8F0] text-[#0F172A] gap-1.5 text-xs font-bold"
+            >
               <Save size={14} /> Save Draft
             </Button>
+
             {currentStep < 4 ? (
               <Button type="button" variant="primary" className="font-bold text-xs shadow-xs" onClick={handleNext}>
                 Continue to {STEPS[currentStep]} →
               </Button>
             ) : (
-              <Link href="/dashboard/projects">
-                <Button type="button" variant="primary" className="font-bold text-xs shadow-xs bg-[#10B981] hover:bg-[#059669]">
-                  Publish Project 🚀
-                </Button>
-              </Link>
+              <Button 
+                type="button" 
+                variant="primary" 
+                isLoading={saving}
+                onClick={() => handleSaveProject('published')}
+                className="font-bold text-xs shadow-xs bg-[#10B981] hover:bg-[#059669]"
+              >
+                Publish Project 🚀
+              </Button>
             )}
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CreateProjectPage() {
+  return (
+    <Suspense fallback={<div className="min-h-[60vh] flex items-center justify-center"><Loader2 size={32} className="animate-spin text-[#4F46E5]" /></div>}>
+      <CreateProjectWizard />
+    </Suspense>
   );
 }

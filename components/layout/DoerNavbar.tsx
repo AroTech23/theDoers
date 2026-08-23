@@ -2,14 +2,52 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Avatar from '@/components/ui/Avatar'
 import { ChevronDown, Plus, LogOut } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 export default function DoerNavbar() {
   const pathname = usePathname()
   const router = useRouter()
+  const supabase = createClient()
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [userName, setUserName] = useState<string>('Doer')
+  const [username, setUsername] = useState<string>('')
+
+  useEffect(() => {
+    async function loadUser() {
+      // 1. First check localStorage for immediate render
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem('thedoers_user_name')
+        if (stored) setUserName(stored)
+      }
+
+      // 2. Fetch live user details from Supabase
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('full_name, username')
+          .eq('id', user.id)
+          .maybeSingle()
+
+        if (profile) {
+          if (profile.full_name) {
+            setUserName(profile.full_name)
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('thedoers_user_name', profile.full_name)
+            }
+          }
+          if (profile.username) {
+            setUsername(profile.username)
+          }
+        }
+      }
+    }
+
+    loadUser()
+  }, [supabase])
 
   const isActive = (path: string) => {
     if (path === '/dashboard' && pathname === '/dashboard') return true
@@ -17,7 +55,8 @@ export default function DoerNavbar() {
     return false
   }
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
     if (typeof window !== 'undefined') {
       localStorage.removeItem('thedoers_auth_role')
       localStorage.removeItem('thedoers_user_name')
@@ -89,14 +128,18 @@ export default function DoerNavbar() {
           <div className="relative">
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex items-center gap-1.5 focus:outline-none cursor-pointer"
+              className="flex items-center gap-2 focus:outline-none cursor-pointer p-1 rounded-xl hover:bg-[#F8FAFC]"
             >
-              <Avatar name="Alex Chen" size="sm" />
+              <Avatar name={userName} size="sm" />
               <ChevronDown size={14} className="text-[#64748B]" />
             </button>
 
             {dropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white border border-[#E2E8F0] rounded-2xl shadow-lg py-1.5 z-50">
+              <div className="absolute right-0 mt-2 w-52 bg-white border border-[#E2E8F0] rounded-2xl shadow-lg py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                <div className="px-4 py-2 border-b border-[#F1F5F9] mb-1">
+                  <p className="text-xs font-bold text-[#0F172A] truncate">{userName}</p>
+                  <p className="text-[10px] text-[#64748B]">Doer Member</p>
+                </div>
                 <Link
                   href="/dashboard/settings"
                   className="block px-4 py-2 text-xs font-semibold text-[#0F172A] hover:bg-[#F8FAFC]"
@@ -105,7 +148,7 @@ export default function DoerNavbar() {
                   Account Settings
                 </Link>
                 <Link
-                  href="/doers/alexchen"
+                  href={username ? `/doers/${username}` : '/dashboard/profile'}
                   className="block px-4 py-2 text-xs font-semibold text-[#0F172A] hover:bg-[#F8FAFC]"
                   onClick={() => setDropdownOpen(false)}
                 >
