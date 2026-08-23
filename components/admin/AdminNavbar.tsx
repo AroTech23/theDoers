@@ -18,6 +18,8 @@ export default function AdminNavbar() {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('thedoers_auth_role')
       localStorage.removeItem('thedoers_user_name')
+      // Clear cookie
+      document.cookie = "thedoers_auth_role=; path=/; max-age=0;"
     }
     router.push('/login')
   }
@@ -25,9 +27,9 @@ export default function AdminNavbar() {
   return (
     <header className="w-full bg-white border-b border-[#E2E8F0] sticky top-0 z-50">
       <div className="w-full px-6 md:px-8 h-16 flex items-center justify-between">
-        {/* Logo and primary navigation links */}
+        {/* Logo (stays in admin dashboard) and primary navigation links */}
         <div className="flex items-center gap-10">
-          <Link href="/" className="flex items-center gap-2.5 text-xl font-bold text-[#0F172A] hover:text-[#4F46E5] transition-colors group">
+          <Link href="/admin" className="flex items-center gap-2.5 text-xl font-bold text-[#0F172A] hover:text-[#4F46E5] transition-colors group" title="theDoers Admin Dashboard">
             <img src="/logo-icon.png" alt="theDoers logo" className="h-8 w-auto object-contain group-hover:scale-105 transition-transform" />
             <span>theDoers</span>
           </Link>
