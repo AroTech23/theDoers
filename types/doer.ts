@@ -11,6 +11,8 @@ export interface User {
   full_name: string
   username: string
   avatar_url?: string
+  phone?: string
+  headline?: string
   role: UserRole
   status: UserStatus
   program?: string
@@ -19,6 +21,9 @@ export interface User {
   github_url?: string
   linkedin_url?: string
   portfolio_url?: string
+  whatsapp_url?: string
+  instagram_url?: string
+  facebook_url?: string
   is_featured: boolean
   created_at: string
 }
