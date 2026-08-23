@@ -33,6 +33,10 @@ export default function HomePage() {
 
         if (profile && (profile.status === 'approved' || profile.role === 'admin')) {
           setAuthRole(profile.role)
+          // Always ensure session cookie is present for server middleware
+          if (typeof window !== 'undefined') {
+            document.cookie = `thedoers_auth_role=${profile.role}; path=/; max-age=604800; SameSite=Lax;`
+          }
           return
         }
       }

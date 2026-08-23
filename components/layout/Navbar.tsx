@@ -35,6 +35,11 @@ function NavbarContent() {
           setAuthRole(profile.role)
           setUserName(profile.full_name)
           setUserAvatar(profile.avatar_url)
+          
+          // Ensure session cookie is always synchronized
+          if (typeof window !== 'undefined') {
+            document.cookie = `thedoers_auth_role=${profile.role}; path=/; max-age=604800; SameSite=Lax;`
+          }
           return
         }
       }
@@ -193,7 +198,7 @@ function NavbarContent() {
 
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-xs font-bold text-[#EF4444] hover:bg-[#FEF2F2] flex items-center gap-2"
+                      className="w-full text-left px-4 py-2 text-xs font-bold text-[#EF4444] hover:bg-[#FEF2F2] flex items-center gap-2 cursor-pointer"
                     >
                       <LogOut size={13} /> Log Out
                     </button>
