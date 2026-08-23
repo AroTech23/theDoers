@@ -109,7 +109,7 @@ export default function HomePage() {
             </form>
 
             {/* Role-Aware CTAs */}
-            <div className="flex gap-3 flex-wrap">
+            <div className="flex items-center gap-3 flex-wrap pt-1">
               <Link href="/doers">
                 <Button variant="primary" size="lg" className="font-bold shadow-xs">
                   Explore Doers
@@ -119,19 +119,19 @@ export default function HomePage() {
               {isAdmin ? (
                 <Link href="/admin">
                   <Button variant="outline" size="lg" className="border-[#0F172A] text-[#0F172A] hover:bg-[#F8FAFC] font-bold shadow-2xs">
-                    <ShieldCheck size={16} className="text-[#4F46E5] mr-1" /> Admin Command Center
+                    <ShieldCheck size={16} className="text-[#4F46E5] mr-1.5" /> Admin Command Center
                   </Button>
                 </Link>
               ) : isDoer ? (
                 <>
                   <Link href="/dashboard/projects/new">
-                    <Button variant="outline" size="lg" className="border-[#4F46E5] text-[#4F46E5] hover:bg-[#EEF2FF] font-bold shadow-2xs">
-                      <Plus size={16} className="mr-1" /> + Add Project
+                    <Button variant="outline" size="lg" className="border-[#4F46E5] text-[#4F46E5] hover:bg-[#EEF2FF] font-bold shadow-2xs flex items-center gap-1.5">
+                      <Plus size={16} /> Add Project
                     </Button>
                   </Link>
                   <Link href="/dashboard">
-                    <Button variant="ghost" size="lg" className="text-[#64748B] hover:text-[#0F172A] font-bold">
-                      <LayoutDashboard size={16} className="mr-1" /> My Dashboard
+                    <Button variant="ghost" size="lg" className="text-[#64748B] hover:text-[#0F172A] font-bold flex items-center gap-1.5">
+                      <LayoutDashboard size={16} /> My Dashboard
                     </Button>
                   </Link>
                 </>
