@@ -99,20 +99,20 @@ export default function LoginPage() {
     <div className="min-h-screen flex flex-col bg-[#F8FAFC] relative">
       <AuthNavbar rightLink={{ label: 'Create Portfolio', href: '/register' }} />
 
-      {/* Floating Animated Toast Notification Popup (Comes and Goes) */}
+      {/* Floating Animated Toast Notification Popup (Matches theDoers Design System) */}
       {errorMessage && (
         <div className="fixed top-20 right-6 z-50 max-w-md w-full animate-in fade-in slide-in-from-top-4 duration-300">
-          <div className="bg-[#0F172A] text-white p-4 rounded-2xl shadow-xl border border-[#334155] flex items-start gap-3">
-            <div className="w-7 h-7 rounded-full bg-[#EF4444]/20 text-[#EF4444] flex items-center justify-center flex-shrink-0 mt-0.5">
-              <AlertCircle size={16} />
+          <div className="bg-white p-4 rounded-2xl shadow-lg border border-[#FCA5A5] flex items-start gap-3.5">
+            <div className="w-8 h-8 rounded-xl bg-[#FEF2F2] text-[#EF4444] border border-[#FECACA] flex items-center justify-center flex-shrink-0 mt-0.5">
+              <AlertCircle size={18} />
             </div>
             <div className="flex-1">
-              <p className="text-xs font-bold text-white mb-0.5">Notice</p>
-              <p className="text-xs text-[#CBD5E1] leading-relaxed">{errorMessage}</p>
+              <p className="text-xs font-bold text-[#0F172A] tracking-tight">Application Notice</p>
+              <p className="text-xs text-[#64748B] leading-relaxed mt-0.5">{errorMessage}</p>
             </div>
             <button
               onClick={() => setErrorMessage(null)}
-              className="text-[#94A3B8] hover:text-white transition-colors p-1"
+              className="text-[#94A3B8] hover:text-[#0F172A] transition-colors p-1 rounded-lg hover:bg-[#F8FAFC] cursor-pointer"
             >
               <X size={15} />
             </button>
