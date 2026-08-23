@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Sparkles, CheckCircle2, ShieldCheck, ArrowRight, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Sparkles, CheckCircle2, ShieldCheck, ArrowRight, AlertCircle, X } from 'lucide-react';
 import AuthNavbar from '@/components/layout/AuthNavbar';
 import Button from '@/components/ui/Button';
 import { createClient } from '@/lib/supabase/client';
@@ -18,6 +18,16 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Auto-dismiss popup toast error after 5 seconds
+  useEffect(() => {
+    if (errorMessage) {
+      const timer = setTimeout(() => {
+        setErrorMessage(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [errorMessage]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -31,6 +41,9 @@ export default function LoginPage() {
       });
 
       if (authError) {
+        if (authError.message.toLowerCase().includes('email not confirmed')) {
+          throw new Error('Please confirm your email address or wait for admin approval before logging in.');
+        }
         throw new Error(authError.message);
       }
 
@@ -53,7 +66,6 @@ export default function LoginPage() {
       // 3. Block Pending & Suspended Doers from accessing Dashboard
       if (role !== 'admin') {
         if (status === 'pending') {
-          // Log user out from Supabase Auth session
           await supabase.auth.signOut();
           throw new Error('Your portfolio is currently pending admin review. You will receive access once approved.');
         }
@@ -84,8 +96,29 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8FAFC]">
+    <div className="min-h-screen flex flex-col bg-[#F8FAFC] relative">
       <AuthNavbar rightLink={{ label: 'Create Portfolio', href: '/register' }} />
+
+      {/* Floating Animated Toast Notification Popup (Comes and Goes) */}
+      {errorMessage && (
+        <div className="fixed top-20 right-6 z-50 max-w-md w-full animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="bg-[#0F172A] text-white p-4 rounded-2xl shadow-xl border border-[#334155] flex items-start gap-3">
+            <div className="w-7 h-7 rounded-full bg-[#EF4444]/20 text-[#EF4444] flex items-center justify-center flex-shrink-0 mt-0.5">
+              <AlertCircle size={16} />
+            </div>
+            <div className="flex-1">
+              <p className="text-xs font-bold text-white mb-0.5">Notice</p>
+              <p className="text-xs text-[#CBD5E1] leading-relaxed">{errorMessage}</p>
+            </div>
+            <button
+              onClick={() => setErrorMessage(null)}
+              className="text-[#94A3B8] hover:text-white transition-colors p-1"
+            >
+              <X size={15} />
+            </button>
+          </div>
+        </div>
+      )}
 
       <main className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8">
         <div className="w-full max-w-4xl bg-white rounded-3xl shadow-sm border border-[#E2E8F0] overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[520px]">
@@ -135,13 +168,6 @@ export default function LoginPage() {
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight">Welcome back</h1>
                 <p className="text-xs text-[#64748B] mt-1">Log in to manage your projects, credentials, and portfolio.</p>
               </div>
-
-              {errorMessage && (
-                <div className="mb-5 p-3.5 rounded-xl bg-[#FEF2F2] border border-[#FCA5A5] flex items-center gap-2.5 text-xs font-semibold text-[#B91C1C]">
-                  <AlertCircle size={16} className="shrink-0 text-[#EF4444]" />
-                  <span>{errorMessage}</span>
-                </div>
-              )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
