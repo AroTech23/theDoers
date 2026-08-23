@@ -45,21 +45,13 @@ export default function DashboardPage() {
   return (
     <div className="max-w-7xl mx-auto px-6 py-10 w-full flex flex-col gap-10">
       {/* ── 1. GREETING & CONTEXT HEADER ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold text-[#111827] tracking-tight">
-            Welcome back, {currentDoer.full_name.split(' ')[0]} 👋
-          </h1>
-          <p className="text-sm text-[#6B7280] mt-1">
-            Here&apos;s an overview of your student engineering portfolio and active projects.
-          </p>
-        </div>
-
-        <Link href="/dashboard/projects/new">
-          <Button variant="primary" size="md" className="gap-2 shadow-sm">
-            <Plus size={16} /> Create New Project
-          </Button>
-        </Link>
+      <div>
+        <h1 className="text-3xl font-extrabold text-[#111827] tracking-tight">
+          Welcome back, {currentDoer.full_name.split(' ')[0]} 👋
+        </h1>
+        <p className="text-sm text-[#6B7280] mt-1">
+          Here&apos;s an overview of your student engineering portfolio and active projects.
+        </p>
       </div>
 
       {/* ── 2. TWO STRATEGIC SUMMARY CARDS ── */}
