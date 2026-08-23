@@ -42,7 +42,10 @@ export default function LoginPage() {
 
       if (authError) {
         if (authError.message.toLowerCase().includes('email not confirmed')) {
-          throw new Error('Please confirm your email address or wait for admin approval before logging in.');
+          throw new Error('Your portfolio is currently pending admin review. You will be able to log in once an admin approves your application.');
+        }
+        if (authError.message.toLowerCase().includes('invalid login credentials')) {
+          throw new Error('Invalid email or password. Please check your credentials or wait for admin approval if newly registered.');
         }
         throw new Error(authError.message);
       }
