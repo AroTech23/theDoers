@@ -21,8 +21,9 @@ export default function DoerNavbar() {
       <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
         {/* Left: Logo */}
         <div className="flex-shrink-0">
-          <Link href="/" className="text-xl font-bold text-[#111827]">
-            theDoers
+          <Link href="/" className="flex items-center gap-2.5 text-xl font-bold text-[#111827] hover:text-[#4F46E5] transition-colors group">
+            <img src="/logo-icon.png" alt="theDoers logo" className="h-8 w-auto object-contain group-hover:scale-105 transition-transform" />
+            <span>theDoers</span>
           </Link>
         </div>
 

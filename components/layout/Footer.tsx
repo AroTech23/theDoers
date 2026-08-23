@@ -23,8 +23,9 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Brand */}
           <div>
-            <Link href="/" className="text-lg font-bold text-[#111827]">
-              theDoers.com
+            <Link href="/" className="flex items-center gap-2.5 text-lg font-bold text-[#111827] group">
+              <img src="/logo-icon.png" alt="theDoers logo" className="h-7 w-auto object-contain group-hover:scale-105 transition-transform" />
+              <span>theDoers.com</span>
             </Link>
             <p className="mt-2 text-sm text-[#6B7280]">
               Discover students by what they can do.
