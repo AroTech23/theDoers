@@ -78,6 +78,7 @@ export default function DashboardPage() {
   }, [supabase]);
 
   const fullName = profile?.full_name || 'Student Engineer';
+  const avatarUrl = profile?.avatar_url || null;
   const program = profile?.program || 'Computer Science';
   const year = profile?.year || 'Year 3';
   const headline = profile?.headline || 'Ethical IT Engineer';
@@ -112,9 +113,9 @@ export default function DashboardPage() {
         {/* Left Card: Live Profile Snapshot */}
         <div className="bg-white border border-[#E5E7EB] rounded-3xl p-8 shadow-xs flex flex-col justify-between">
           <div className="flex flex-col gap-4">
-            {/* Avatar Circle */}
-            <div className="w-16 h-16 rounded-2xl bg-[#4F46E5] flex items-center justify-center text-white text-xl font-bold shadow-xs">
-              <Avatar name={fullName} size="lg" />
+            {/* Circular Avatar */}
+            <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center shadow-xs">
+              <Avatar name={fullName} imageUrl={avatarUrl || undefined} size="lg" className="w-16 h-16 text-xl rounded-full" />
             </div>
 
             {/* Name & Academic info */}

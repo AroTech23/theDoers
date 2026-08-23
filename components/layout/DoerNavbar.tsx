@@ -13,6 +13,7 @@ export default function DoerNavbar() {
   const supabase = createClient()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [userName, setUserName] = useState<string>('Doer')
+  const [userAvatar, setUserAvatar] = useState<string | undefined>(undefined)
   const [username, setUsername] = useState<string>('')
 
   useEffect(() => {
@@ -28,7 +29,7 @@ export default function DoerNavbar() {
       if (user) {
         const { data: profile } = await supabase
           .from('users')
-          .select('full_name, username')
+          .select('full_name, username, avatar_url')
           .eq('id', user.id)
           .maybeSingle()
 
@@ -41,6 +42,9 @@ export default function DoerNavbar() {
           }
           if (profile.username) {
             setUsername(profile.username)
+          }
+          if (profile.avatar_url) {
+            setUserAvatar(profile.avatar_url)
           }
         }
       }
@@ -60,24 +64,27 @@ export default function DoerNavbar() {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('thedoers_auth_role')
       localStorage.removeItem('thedoers_user_name')
-      document.cookie = "thedoers_auth_role=; path=/; max-age=0;"
+      localStorage.removeItem('thedoers_user_email')
     }
     router.push('/login')
   }
 
   return (
-    <nav className="w-full bg-white border-b border-[#E2E8F0] sticky top-0 z-50 h-16">
-      <div className="w-full px-6 md:px-8 h-full flex items-center justify-between">
-        {/* Left: Logo (links to /dashboard) */}
-        <div className="flex-shrink-0">
-          <Link href="/dashboard" className="flex items-center gap-2.5 text-xl font-bold text-[#0F172A] hover:text-[#4F46E5] transition-colors group" title="theDoers Dashboard">
-            <img src="/logo-icon.png" alt="theDoers logo" className="h-8 w-auto object-contain group-hover:scale-105 transition-transform" />
-            <span>theDoers</span>
+    <nav className="w-full bg-white border-b border-[#E2E8F0] sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+        
+        {/* Left: theDoers Brand Logo */}
+        <div className="flex items-center gap-8">
+          <Link href="/" className="font-extrabold text-xl tracking-tight text-[#0F172A] flex items-center gap-2">
+            <span className="w-8 h-8 rounded-xl bg-[#4F46E5] text-white flex items-center justify-center font-black text-base shadow-xs">
+              D
+            </span>
+            <span>theDoers<span className="text-[#4F46E5]">.</span></span>
           </Link>
         </div>
 
-        {/* Center: Tabs */}
-        <div className="hidden md:flex h-full items-center gap-8">
+        {/* Center: Navigation Tabs */}
+        <div className="hidden md:flex items-center gap-8 h-full">
           <Link
             href="/dashboard"
             className={`h-full flex items-center px-1 border-b-2 transition-colors ${
@@ -128,9 +135,9 @@ export default function DoerNavbar() {
           <div className="relative">
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex items-center gap-2 focus:outline-none cursor-pointer p-1 rounded-xl hover:bg-[#F8FAFC]"
+              className="flex items-center gap-2 focus:outline-none cursor-pointer p-1 rounded-full hover:bg-[#F8FAFC]"
             >
-              <Avatar name={userName} size="sm" />
+              <Avatar name={userName} imageUrl={userAvatar} size="sm" className="rounded-full overflow-hidden" />
               <ChevronDown size={14} className="text-[#64748B]" />
             </button>
 
@@ -138,33 +145,50 @@ export default function DoerNavbar() {
               <div className="absolute right-0 mt-2 w-52 bg-white border border-[#E2E8F0] rounded-2xl shadow-lg py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                 <div className="px-4 py-2 border-b border-[#F1F5F9] mb-1">
                   <p className="text-xs font-bold text-[#0F172A] truncate">{userName}</p>
-                  <p className="text-[10px] text-[#64748B]">Doer Member</p>
+                  <p className="text-[11px] text-[#64748B] truncate">Student Engineer</p>
                 </div>
+
+                <Link
+                  href="/dashboard/profile"
+                  onClick={() => setDropdownOpen(false)}
+                  className="block px-4 py-2 text-xs font-medium text-[#334155] hover:bg-[#F8FAFC] hover:text-[#0F172A] transition-colors"
+                >
+                  Edit Profile
+                </Link>
+
+                <Link
+                  href={`/doers/${username || 'doer'}?from=dashboard`}
+                  onClick={() => setDropdownOpen(false)}
+                  className="block px-4 py-2 text-xs font-medium text-[#334155] hover:bg-[#F8FAFC] hover:text-[#0F172A] transition-colors"
+                >
+                  View Public Portfolio ↗
+                </Link>
+
                 <Link
                   href="/dashboard/settings"
-                  className="block px-4 py-2 text-xs font-semibold text-[#0F172A] hover:bg-[#F8FAFC]"
                   onClick={() => setDropdownOpen(false)}
+                  className="block px-4 py-2 text-xs font-medium text-[#334155] hover:bg-[#F8FAFC] hover:text-[#0F172A] transition-colors"
                 >
                   Account Settings
                 </Link>
-                <Link
-                  href={username ? `/doers/${username}` : '/dashboard/profile'}
-                  className="block px-4 py-2 text-xs font-semibold text-[#0F172A] hover:bg-[#F8FAFC]"
-                  onClick={() => setDropdownOpen(false)}
-                >
-                  View Public Profile ↗
-                </Link>
+
                 <div className="border-t border-[#F1F5F9] my-1" />
+
                 <button
-                  onClick={handleLogout}
-                  className="w-full text-left px-4 py-2 text-xs font-bold text-[#EF4444] hover:bg-[#FEF2F2] flex items-center gap-2 cursor-pointer"
+                  onClick={() => {
+                    setDropdownOpen(false)
+                    handleLogout()
+                  }}
+                  className="w-full text-left px-4 py-2 text-xs font-bold text-[#EF4444] hover:bg-[#FEF2F2] flex items-center gap-2 transition-colors cursor-pointer"
                 >
                   <LogOut size={13} /> Log Out
                 </button>
               </div>
             )}
           </div>
+
         </div>
+
       </div>
     </nav>
   )
