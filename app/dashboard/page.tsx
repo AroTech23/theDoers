@@ -97,57 +97,58 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3">
-        <Loader2 size={32} className="animate-spin text-[#4F46E5]" />
+      <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3">
+        <Loader2 size={28} className="animate-spin text-[#4F46E5]" />
         <p className="text-xs font-bold text-[#64748B]">Loading your workspace...</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10 w-full flex flex-col gap-10">
+    <div className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10 flex flex-col gap-8 lg:gap-10">
       
-      {/* ── TOP SECTION: TWO CLEAN WHITE CARDS ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+      {/* ── TOP SECTION: CONTENT-DRIVEN PROFILE & OVERVIEW GRID ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start">
         
-        {/* Left Card: Live Profile Snapshot */}
-        <div className="bg-white border border-[#E5E7EB] rounded-3xl p-6 sm:p-8 shadow-xs flex flex-col justify-between">
-          <div className="flex flex-col gap-4">
-            {/* Circular Avatar */}
-            <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center shadow-xs">
-              <Avatar name={fullName} imageUrl={avatarUrl || undefined} size="lg" className="w-16 h-16 text-xl rounded-full" />
-            </div>
+        {/* Left Card: Live Profile Snapshot (~40% on Desktop = 5 Cols) */}
+        <div className="lg:col-span-5 bg-white border border-[#E2E8F0] rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-7 shadow-xs flex flex-col justify-between h-auto gap-5">
+          <div className="flex flex-col gap-3.5">
+            {/* Header row with Avatar + Quick Academic summary */}
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden shrink-0 shadow-2xs">
+                <Avatar name={fullName} imageUrl={avatarUrl || undefined} size="lg" className="w-14 h-14 sm:w-16 sm:h-16 text-lg sm:text-xl rounded-full" />
+              </div>
 
-            {/* Name & Academic info */}
-            <div>
-              <h2 className="text-2xl font-bold text-[#111827]">{fullName}</h2>
-              <p className="text-xs font-medium text-[#6B7280] mt-0.5">
-                {year} · {program}
-              </p>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-xl sm:text-2xl font-bold text-[#0F172A] tracking-tight truncate">{fullName}</h2>
+                <p className="text-xs font-semibold text-[#64748B] mt-0.5 truncate">
+                  {year} · {program}
+                </p>
+              </div>
             </div>
 
             {/* Short Bio / Headline */}
-            <p className="text-xs text-[#6B7280] leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#475569] leading-relaxed line-clamp-3">
               {headline}
             </p>
           </div>
 
           {/* Action Buttons Row */}
-          <div className="flex items-center gap-2 pt-6 mt-2">
+          <div className="flex items-center gap-2 pt-3 border-t border-[#F1F5F9] mt-auto">
             <Link
               href={`/doers/${username}?from=dashboard`}
-              className="flex-1"
+              className="flex-1 min-w-0"
             >
-              <button className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-[#4F46E5] hover:bg-[#4338CA] text-white rounded-xl text-xs font-bold transition-colors cursor-pointer shadow-xs">
-                View Public Portfolio ↗
+              <button className="w-full inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:py-2.5 bg-[#4F46E5] hover:bg-[#4338CA] text-white rounded-xl text-xs font-bold transition-colors cursor-pointer shadow-xs truncate">
+                View Portfolio ↗
               </button>
             </Link>
 
             {/* Edit Button */}
-            <Link href="/dashboard/profile">
+            <Link href="/dashboard/profile" className="shrink-0">
               <button
                 title="Edit Profile"
-                className="p-2.5 bg-white hover:bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-[#6B7280] hover:text-[#111827] transition-colors cursor-pointer"
+                className="p-2 sm:p-2.5 bg-white hover:bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-[#64748B] hover:text-[#0F172A] transition-colors cursor-pointer"
               >
                 <Edit2 size={15} />
               </button>
@@ -157,56 +158,71 @@ export default function DashboardPage() {
             <button
               onClick={handleCopyLink}
               title="Copy Portfolio Link"
-              className="p-2.5 bg-white hover:bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl text-[#6B7280] hover:text-[#111827] transition-colors cursor-pointer"
+              className="p-2 sm:p-2.5 bg-white hover:bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-[#64748B] hover:text-[#0F172A] transition-colors cursor-pointer shrink-0"
             >
               {copied ? <Check size={15} className="text-[#10B981]" /> : <Share2 size={15} />}
             </button>
           </div>
         </div>
 
-        {/* Right Card: Portfolio Stats & Setup */}
-        <div className="bg-white border border-[#E5E7EB] rounded-3xl p-6 sm:p-8 shadow-xs flex flex-col justify-between">
-          <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-[#4F46E5] mb-2 block">
-              Portfolio Overview
-            </span>
-            <h3 className="text-xl font-bold text-[#111827] mb-6">Your Proof of Work</h3>
+        {/* Right Card: Portfolio Stats & Setup (~60% on Desktop = 7 Cols) */}
+        <div className="lg:col-span-7 bg-white border border-[#E2E8F0] rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-7 shadow-xs flex flex-col justify-between h-auto gap-5">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#4F46E5] block">
+                  Portfolio Overview
+                </span>
+                <h3 className="text-lg sm:text-xl font-bold text-[#0F172A]">Your Proof of Work</h3>
+              </div>
 
-            {/* Three Key Metrics */}
-            <div className="grid grid-cols-3 gap-4 pb-6 border-b border-[#F1F5F9] text-center">
+              <Link href="/dashboard/projects/new" className="hidden sm:inline-block">
+                <Button variant="primary" size="sm" className="font-bold text-xs shadow-2xs">
+                  <Plus size={13} className="mr-1" /> New Project
+                </Button>
+              </Link>
+            </div>
+
+            {/* Three Key Metrics in Compact Card Grid */}
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 py-3 px-3 sm:px-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl text-center">
               <div>
-                <div className="text-2xl font-extrabold text-[#0F172A]">{publishedCount}</div>
-                <div className="text-[11px] font-semibold text-[#64748B] mt-0.5">Published</div>
+                <div className="text-xl sm:text-2xl font-extrabold text-[#0F172A]">{publishedCount}</div>
+                <div className="text-[10px] sm:text-xs font-semibold text-[#64748B] mt-0.5">Published</div>
               </div>
-              <div className="border-x border-[#F1F5F9]">
-                <div className="text-2xl font-extrabold text-[#0F172A]">{draftCount}</div>
-                <div className="text-[11px] font-semibold text-[#64748B] mt-0.5">Drafts</div>
+              <div className="border-x border-[#E2E8F0]">
+                <div className="text-xl sm:text-2xl font-extrabold text-[#0F172A]">{draftCount}</div>
+                <div className="text-[10px] sm:text-xs font-semibold text-[#64748B] mt-0.5">Drafts</div>
               </div>
               <div>
-                <div className="text-2xl font-extrabold text-[#0F172A]">{skills.length}</div>
-                <div className="text-[11px] font-semibold text-[#64748B] mt-0.5">Skills</div>
+                <div className="text-xl sm:text-2xl font-extrabold text-[#0F172A]">{skills.length}</div>
+                <div className="text-[10px] sm:text-xs font-semibold text-[#64748B] mt-0.5">Skills</div>
               </div>
             </div>
 
             {/* Attached Skills */}
-            <div className="pt-5">
-              <span className="text-xs font-bold text-[#0F172A] mb-2 block">Your Verified Skills:</span>
+            <div>
+              <span className="text-[11px] font-bold text-[#0F172A] mb-1.5 block">Your Verified Skills:</span>
               <div className="flex flex-wrap gap-1.5">
                 {skills.length > 0 ? (
-                  skills.map(s => (
-                    <Badge key={s} label={s} className="bg-[#EEF2FF] text-[#4F46E5] border border-[#C7D2FE] text-xs font-bold" />
+                  skills.slice(0, 8).map(s => (
+                    <Badge key={s} label={s} className="bg-[#EEF2FF] text-[#4F46E5] border border-[#C7D2FE] text-[11px] font-bold py-0.5" />
                   ))
                 ) : (
                   <span className="text-xs text-[#94A3B8] italic">No skills added yet.</span>
+                )}
+                {skills.length > 8 && (
+                  <span className="text-[11px] font-bold text-[#64748B] self-center px-1">
+                    +{skills.length - 8} more
+                  </span>
                 )}
               </div>
             </div>
           </div>
 
-          <div className="pt-6">
+          <div className="pt-2 sm:hidden">
             <Link href="/dashboard/projects/new">
               <Button variant="primary" size="md" className="w-full font-bold shadow-xs">
-                <Plus size={15} className="mr-1" /> Create New Project
+                <Plus size={14} className="mr-1" /> Create New Project
               </Button>
             </Link>
           </div>
@@ -215,11 +231,11 @@ export default function DashboardPage() {
       </div>
 
       {/* ── BOTTOM SECTION: MY PROJECTS ── */}
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4 sm:gap-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-[#111827]">My Projects</h2>
-            <p className="text-xs text-[#6B7280] mt-0.5">
+            <h2 className="text-xl sm:text-2xl font-bold text-[#0F172A]">My Projects</h2>
+            <p className="text-xs sm:text-sm text-[#64748B] mt-0.5">
               Manage your engineering case studies, live demos, and drafts.
             </p>
           </div>
@@ -231,14 +247,14 @@ export default function DashboardPage() {
         </div>
 
         {projects.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
             {projects.slice(0, 3).map((p) => (
               <div
                 key={p.id}
                 className="bg-white border border-[#E2E8F0] rounded-2xl overflow-hidden shadow-xs flex flex-col justify-between hover:shadow-md hover:border-[#CBD5E1] transition-all group"
               >
                 {/* Project Image Banner */}
-                <div className="w-full h-44 bg-[#EEF2FF] border-b border-[#E2E8F0] overflow-hidden relative">
+                <div className="w-full h-40 sm:h-44 bg-[#EEF2FF] border-b border-[#E2E8F0] overflow-hidden relative">
                   {p.image_url ? (
                     <img
                       src={p.image_url}
@@ -247,12 +263,12 @@ export default function DashboardPage() {
                     />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center text-[#4F46E5]/40">
-                      <ImageIcon size={36} />
+                      <ImageIcon size={32} />
                     </div>
                   )}
                   {/* Floating Status Pill */}
-                  <div className="absolute top-3 right-3">
-                    <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full shadow-2xs backdrop-blur-md ${
+                  <div className="absolute top-2.5 right-2.5">
+                    <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-2xs backdrop-blur-md ${
                       p.status === 'published' 
                         ? 'bg-[#DEF7EC]/90 text-[#03543F] border border-[#BCF0DA]' 
                         : 'bg-white/90 text-[#4B5563] border border-[#E5E7EB]'
@@ -262,27 +278,27 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                <div className="p-5 flex flex-col flex-1 gap-2.5">
+                <div className="p-4 sm:p-5 flex flex-col flex-1 gap-2">
                   {p.category && (
                     <span className="text-[10px] font-bold text-[#4F46E5] uppercase tracking-wider">
                       {p.category}
                     </span>
                   )}
 
-                  <h3 className="text-base font-bold text-[#111827] line-clamp-1 leading-snug">{p.title}</h3>
-                  <p className="text-xs text-[#6B7280] line-clamp-2 leading-relaxed flex-1">
+                  <h3 className="text-sm sm:text-base font-bold text-[#0F172A] line-clamp-1 leading-snug">{p.title}</h3>
+                  <p className="text-xs text-[#64748B] line-clamp-2 leading-relaxed flex-1">
                     {p.description}
                   </p>
                 </div>
 
-                <div className="px-5 py-3.5 bg-[#F8FAFC]/50 border-t border-[#F1F5F9] flex items-center justify-between">
+                <div className="px-4 sm:px-5 py-3 bg-[#F8FAFC]/60 border-t border-[#F1F5F9] flex items-center justify-between">
                   <Link href={`/projects/${p.id}?from=dashboard`}>
                     <span className="text-xs font-bold text-[#4F46E5] hover:underline flex items-center gap-1">
-                      View Case Study <ExternalLink size={12} />
+                      Case Study <ExternalLink size={11} />
                     </span>
                   </Link>
                   <Link href={`/dashboard/projects/new?edit=${p.id}`}>
-                    <Button variant="outline" size="sm" className="text-xs font-bold bg-white">
+                    <Button variant="outline" size="sm" className="text-xs font-bold bg-white px-3 py-1">
                       Edit
                     </Button>
                   </Link>
@@ -291,11 +307,11 @@ export default function DashboardPage() {
             ))}
           </div>
         ) : (
-          <div className="bg-white rounded-3xl border border-dashed border-[#CBD5E1] p-12 text-center flex flex-col items-center gap-3">
+          <div className="bg-white rounded-2xl sm:rounded-3xl border border-dashed border-[#CBD5E1] p-8 sm:p-12 text-center flex flex-col items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-[#EEF2FF] text-[#4F46E5] flex items-center justify-center">
               <FolderKanban size={24} />
             </div>
-            <h3 className="text-lg font-bold text-[#0F172A]">No projects published yet</h3>
+            <h3 className="text-base sm:text-lg font-bold text-[#0F172A]">No projects published yet</h3>
             <p className="text-xs text-[#64748B] max-w-sm">
               Start building your portfolio by writing your first engineering problem-to-solution case study.
             </p>
