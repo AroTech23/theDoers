@@ -26,11 +26,12 @@ function NavbarContent() {
       if (user) {
         const { data: profile } = await supabase
           .from('users')
-          .select('full_name, role, avatar_url')
+          .select('full_name, role, status, avatar_url')
           .eq('id', user.id)
           .maybeSingle()
 
-        if (profile) {
+        // ONLY treat user as logged in if they are approved or admin
+        if (profile && (profile.status === 'approved' || profile.role === 'admin')) {
           setAuthRole(profile.role)
           setUserName(profile.full_name)
           setUserAvatar(profile.avatar_url)
@@ -38,7 +39,7 @@ function NavbarContent() {
         }
       }
 
-      // If not logged in in Supabase, clear local auth
+      // If user is pending, suspended, or unauthenticated, clear local session
       setAuthRole(null)
       setUserName(null)
       setUserAvatar(null)
@@ -142,7 +143,7 @@ function NavbarContent() {
               </button>
             </div>
           ) : isDoerLoggedIn ? (
-            /* 2. DOER / STUDENT LOGGED IN */
+            /* 2. DOER / STUDENT LOGGED IN (APPROVED ONLY) */
             <div className="flex items-center gap-3">
               <Link href="/dashboard/projects/new">
                 <Button variant="primary" size="sm" className="gap-1.5 font-bold shadow-2xs">
@@ -201,7 +202,7 @@ function NavbarContent() {
               </div>
             </div>
           ) : (
-            /* 3. PUBLIC VISITOR (LOGGED OUT) */
+            /* 3. PUBLIC VISITOR (LOGGED OUT / PENDING) */
             <div className="flex items-center gap-3">
               <Link href="/login">
                 <Button variant="ghost" size="sm" className="font-semibold text-xs text-[#334155] hover:text-[#0F172A]">

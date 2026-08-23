@@ -22,9 +22,24 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setAuthRole(localStorage.getItem('thedoers_auth_role'))
+    async function loadAuth() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('role, status')
+          .eq('id', user.id)
+          .maybeSingle()
+
+        if (profile && (profile.status === 'approved' || profile.role === 'admin')) {
+          setAuthRole(profile.role)
+          return
+        }
+      }
+      setAuthRole(null)
     }
+
+    loadAuth()
 
     async function loadFeaturedDoers() {
       try {
