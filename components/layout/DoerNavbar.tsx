@@ -70,64 +70,69 @@ export default function DoerNavbar() {
   }
 
   return (
-    <nav className="w-full bg-white border-b border-[#E2E8F0] sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+    <nav className="w-full bg-white border-b border-[#E2E8F0] sticky top-0 z-50 h-16">
+      <div className="w-full px-6 md:px-8 lg:px-12 h-full flex items-center justify-between">
         
-        {/* Left: theDoers Brand Logo */}
-        <div className="flex items-center gap-8">
-          <Link href="/" className="font-extrabold text-xl tracking-tight text-[#0F172A] flex items-center gap-2">
-            <span className="w-8 h-8 rounded-xl bg-[#4F46E5] text-white flex items-center justify-center font-black text-base shadow-xs">
-              D
-            </span>
-            <span>theDoers<span className="text-[#4F46E5]">.</span></span>
+        {/* Left: theDoers Brand Logo with real graphic icon */}
+        <div className="flex items-center gap-8 lg:gap-12 h-full">
+          <Link 
+            href="/" 
+            className="flex items-center gap-2.5 text-xl font-bold text-[#0F172A] hover:text-[#4F46E5] transition-colors group"
+          >
+            <img 
+              src="/logo-icon.png" 
+              alt="theDoers logo" 
+              className="h-8 w-auto object-contain group-hover:scale-105 transition-transform" 
+            />
+            <span>theDoers</span>
           </Link>
-        </div>
 
-        {/* Center: Navigation Tabs */}
-        <div className="hidden md:flex items-center gap-8 h-full">
-          <Link
-            href="/dashboard"
-            className={`h-full flex items-center px-1 border-b-2 transition-colors ${
-              isActive('/dashboard') 
-                ? 'border-[#0F172A] text-[#0F172A] font-bold' 
-                : 'border-transparent text-[#64748B] hover:text-[#0F172A] font-medium'
-            }`}
-          >
-            Dashboard
-          </Link>
-          <Link
-            href="/dashboard/projects"
-            className={`h-full flex items-center px-1 border-b-2 transition-colors ${
-              isActive('/dashboard/projects') 
-                ? 'border-[#0F172A] text-[#0F172A] font-bold' 
-                : 'border-transparent text-[#64748B] hover:text-[#0F172A] font-medium'
-            }`}
-          >
-            My Projects
-          </Link>
-          <Link
-            href="/dashboard/profile"
-            className={`h-full flex items-center px-1 border-b-2 transition-colors ${
-              isActive('/dashboard/profile') 
-                ? 'border-[#0F172A] text-[#0F172A] font-bold' 
-                : 'border-transparent text-[#64748B] hover:text-[#0F172A] font-medium'
-            }`}
-          >
-            My Portfolio
-          </Link>
+          {/* Center: Navigation Tabs */}
+          <div className="hidden md:flex items-center gap-6 lg:gap-8 h-full">
+            <Link
+              href="/dashboard"
+              className={`h-full flex items-center px-1 border-b-2 transition-colors ${
+                isActive('/dashboard') 
+                  ? 'border-[#0F172A] text-[#0F172A] font-bold' 
+                  : 'border-transparent text-[#64748B] hover:text-[#0F172A] font-medium'
+              }`}
+            >
+              Dashboard
+            </Link>
+            <Link
+              href="/dashboard/projects"
+              className={`h-full flex items-center px-1 border-b-2 transition-colors ${
+                isActive('/dashboard/projects') 
+                  ? 'border-[#0F172A] text-[#0F172A] font-bold' 
+                  : 'border-transparent text-[#64748B] hover:text-[#0F172A] font-medium'
+              }`}
+            >
+              My Projects
+            </Link>
+            <Link
+              href="/dashboard/profile"
+              className={`h-full flex items-center px-1 border-b-2 transition-colors ${
+                isActive('/dashboard/profile') 
+                  ? 'border-[#0F172A] text-[#0F172A] font-bold' 
+                  : 'border-transparent text-[#64748B] hover:text-[#0F172A] font-medium'
+              }`}
+            >
+              My Portfolio
+            </Link>
+          </div>
         </div>
 
         {/* Right side items */}
         <div className="flex items-center gap-4">
           <Link
             href="/"
-            className="text-xs text-[#64748B] hover:text-[#4F46E5] font-semibold hidden md:inline-block bg-[#F8FAFC] border border-[#E2E8F0] px-3 py-1.5 rounded-xl hover:bg-[#EEF2FF] transition-colors"
+            className="text-xs text-[#64748B] hover:text-[#4F46E5] font-semibold hidden md:inline-block bg-[#F8FAFC] border border-[#E2E8F0] px-3.5 py-2 rounded-xl hover:bg-[#EEF2FF] transition-colors"
           >
             Public Site ↗
           </Link>
 
           <Link href="/dashboard/projects/new">
-            <button className="flex items-center gap-1.5 px-3.5 py-2 bg-[#0F172A] hover:bg-[#1E293B] text-white text-xs font-bold rounded-xl transition-colors shadow-2xs cursor-pointer">
+            <button className="flex items-center gap-1.5 px-4 py-2 bg-[#0F172A] hover:bg-[#1E293B] text-white text-xs font-bold rounded-xl transition-colors shadow-2xs cursor-pointer">
               <Plus size={14} /> Add Project
             </button>
           </Link>
