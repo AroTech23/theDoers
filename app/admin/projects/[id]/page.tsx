@@ -156,9 +156,12 @@ export default function AdminProjectDetailsPage() {
             {project.process_steps && (
               <div className="border-l-2 border-[#E5E7EB] pl-4">
                 <span className="text-xs font-bold uppercase text-[#6B7280]">PROCESS</span>
-                <ul className="mt-2 space-y-1.5 text-xs text-[#374151] list-disc list-inside">
+                <ul className="mt-2 space-y-2 text-xs text-[#374151]">
                   {project.process_steps.map((step, idx) => (
-                    <li key={idx}>{step}</li>
+                    <li key={idx} className="flex gap-2 items-start">
+                      <span className="font-bold text-[#4F46E5] flex-shrink-0">Step {idx + 1}:</span>
+                      <span>{typeof step === 'string' ? step : `${step.title} - ${step.description}`}</span>
+                    </li>
                   ))}
                 </ul>
               </div>

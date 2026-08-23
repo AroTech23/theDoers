@@ -2,6 +2,7 @@ export interface AdminStudent {
   id: string
   full_name: string
   email: string
+  phone?: string
   program: string
   year: string
   projects_count: number
@@ -11,9 +12,14 @@ export interface AdminStudent {
   headline?: string
   bio?: string
   skills: string[]
-  github_url?: string
-  linkedin_url?: string
-  website_url?: string
+  links?: {
+    linkedin?: string
+    github?: string
+    website?: string
+    whatsapp?: string
+    instagram?: string
+    facebook?: string
+  }
 }
 
 export interface AdminProject {
@@ -23,95 +29,110 @@ export interface AdminProject {
   student_name: string
   student_program: string
   category: string
+  market?: string
   status: 'Published' | 'Draft'
   last_updated: string
   created_date: string
   short_description: string
   problem?: string
   current_state?: string
-  process_steps?: string[]
+  process_steps?: { step: number; title: string; description: string }[] | string[]
   desired_state?: string
   solution?: string
+  result?: string
   key_result?: string
+  key_metric?: { value: string; description: string }
   skills: string[]
   screenshots?: string[]
   document_name?: string
   document_size?: string
   github_url?: string
   live_url?: string
+  doc_url?: string
 }
 
 export const MOCK_ADMIN_STUDENTS: AdminStudent[] = [
   {
     id: 's1',
     full_name: 'Alex Chen',
-    email: 'alex@example.com',
+    email: 'alex.chen@university.edu',
+    phone: '+1 (555) 234-5678',
     program: 'Computer Science',
     year: 'Year 3',
     projects_count: 6,
     joined_date: 'Aug 12, 2026',
     status: 'Active',
     headline: 'Software Engineering student interested in AI and educational technology',
-    bio: 'Passionate about leveraging technology to solve real-world problems. Experienced in building scalable web applications and exploring machine learning models.',
-    skills: ['Python', 'React', 'Machine Learning', 'UI/UX'],
-    github_url: 'https://github.com/alexchen',
-    linkedin_url: 'https://linkedin.com/in/alexchen',
-    website_url: 'https://alexchen.dev'
+    bio: 'Passionate about leveraging technology to solve real-world problems. Experienced in building scalable web applications and exploring machine learning models. Beyond coursework, I actively participate in hackathons and open-source contributions.',
+    skills: ['Python', 'React', 'Machine Learning', 'UI/UX', 'TypeScript', 'Node.js', 'PostgreSQL', 'Docker'],
+    links: {
+      linkedin: 'https://linkedin.com/in/alexchen',
+      github: 'https://github.com/alexchen',
+      website: 'https://alexchen.dev',
+      whatsapp: '+1 (555) 234-5678',
+      instagram: 'https://instagram.com/alexchen_dev',
+      facebook: 'https://facebook.com/alexchen.builds'
+    }
   },
   {
     id: 's2',
-    full_name: 'Sarah Johnson',
-    email: 'sarah.j@university.edu',
-    program: 'Software Engineering',
-    year: 'Year 2',
-    projects_count: 3,
-    joined_date: 'Aug 10, 2026',
+    full_name: 'Jane Doe',
+    email: 'jane.doe@university.edu',
+    phone: '+1 (555) 345-6789',
+    program: 'Interactive Design & HCI',
+    year: 'Year 4',
+    projects_count: 4,
+    joined_date: 'Aug 15, 2026',
     status: 'Pending',
-    headline: 'Frontend enthusiast building accessible digital solutions',
-    bio: 'Focusing on clean UI component systems and developer accessibility.',
-    skills: ['React', 'TypeScript', 'Tailwind', 'Next.js'],
-    github_url: 'https://github.com',
+    headline: 'Product designer focusing on accessible education tools & micro-interactions',
+    bio: 'Building tools for student creators. Passionate about user research, micro-interactions, accessibility auditing, and scalable design systems for modern web apps.',
+    skills: ['Figma', 'UI/UX', 'User Research', 'Prototyping', 'Design Systems', 'HTML/CSS'],
+    links: {
+      linkedin: 'https://linkedin.com/in/janedoe',
+      github: 'https://github.com/janedoe',
+      website: 'https://janedoe.design',
+      whatsapp: '+1 (555) 345-6789',
+      instagram: 'https://instagram.com/janedoe_design'
+    }
   },
   {
     id: 's3',
-    full_name: 'David Kim',
-    email: 'david.kim@university.edu',
-    program: 'Data Science',
-    year: 'Year 4',
-    projects_count: 4,
-    joined_date: 'Aug 8, 2026',
+    full_name: 'Marcus Vance',
+    email: 'marcus.vance@university.edu',
+    phone: '+1 (555) 456-7890',
+    program: 'Computer Science & AI',
+    year: 'Year 3',
+    projects_count: 3,
+    joined_date: 'Aug 18, 2026',
     status: 'Active',
-    headline: 'Analyzing data to discover actionable insights',
-    bio: 'Experienced in predictive modeling, exploratory analysis, and ETL pipelines.',
-    skills: ['Python', 'SQL', 'Pandas', 'Tableau'],
-    github_url: 'https://github.com',
+    headline: 'Machine learning researcher and low-latency systems tinkerer',
+    bio: 'Exploring deep learning pipelines, vector retrieval architectures, and hardware-accelerated distributed inference systems.',
+    skills: ['Python', 'PyTorch', 'C++', 'CUDA', 'FastAPI', 'Redis'],
+    links: {
+      linkedin: 'https://linkedin.com/in/marcusvance',
+      github: 'https://github.com/marcusvance',
+      website: 'https://marcusvance.ai',
+      whatsapp: '+1 (555) 456-7890'
+    }
   },
   {
     id: 's4',
-    full_name: 'Maya Patel',
-    email: 'maya.p@university.edu',
-    program: 'Computer Science',
-    year: 'Year 3',
-    projects_count: 3,
-    joined_date: 'Aug 4, 2026',
+    full_name: 'Sarah Connor',
+    email: 'sarah.c@university.edu',
+    phone: '+1 (555) 567-8901',
+    program: 'Cybersecurity & Systems',
+    year: 'Year 2',
+    projects_count: 2,
+    joined_date: 'Aug 20, 2026',
     status: 'Pending',
-    headline: 'IoT & embedded systems tinkerer',
-    bio: 'Connecting physical hardware with responsive cloud dashboards.',
-    skills: ['C++', 'Embedded Systems', 'IoT', 'Node.js'],
-    github_url: 'https://github.com',
-  },
-  {
-    id: 's5',
-    full_name: 'Jordan Lee',
-    email: 'jordan.l@university.edu',
-    program: 'Software Engineering',
-    year: 'Year 4',
-    projects_count: 5,
-    joined_date: 'Jul 29, 2026',
-    status: 'Suspended',
-    headline: 'Full stack engineer with a security-first mindset',
-    bio: 'Working with distributed systems and secure communication protocols.',
-    skills: ['Go', 'Docker', 'Kubernetes', 'Cybersecurity'],
+    headline: 'Security analyst focusing on cloud infrastructure hardening & pen testing',
+    bio: 'Dedicated to automated vulnerability scanning, zero-trust network architectures, and hardware security modules.',
+    skills: ['Cybersecurity', 'Linux', 'Network Security', 'Wireshark', 'Python', 'AWS Security'],
+    links: {
+      linkedin: 'https://linkedin.com/in/sarahconnor',
+      github: 'https://github.com/sarahconnor-sec',
+      whatsapp: '+1 (555) 567-8901'
+    }
   }
 ]
 
@@ -121,80 +142,61 @@ export const MOCK_ADMIN_PROJECTS: AdminProject[] = [
     title: 'AI-Powered Study Assistant',
     student_id: 's1',
     student_name: 'Alex Chen',
-    student_program: 'Computer Science · Year 3',
+    student_program: 'Computer Science',
     category: 'AI / Machine Learning',
+    market: 'Education / EdTech',
     status: 'Published',
-    last_updated: 'Aug 18, 2026',
-    created_date: 'Aug 12, 2026',
-    short_description: 'An intelligent application designed to help students organize their study materials, extract key concepts, and generate automated practice quizzes using advanced Natural Language Processing models.',
-    problem: 'Students often struggle to organize vast amounts of reading material and lecture notes. Creating effective study guides manually is time-consuming and prone to highlighting bias, leading to inefficient study sessions.',
-    current_state: 'Study materials are spread across PDFs, physical notebooks, and various digital platforms with no semantic connection or easy way to cross-reference concepts.',
+    last_updated: '2 days ago',
+    created_date: 'Feb 01, 2026',
+    short_description: 'A personalized learning tool that generates quizzes and summaries from lecture notes using natural language processing.',
+    problem: 'University students frequently struggle with cognitive overload when processing hundreds of pages of technical lecture transcripts before examinations.',
+    current_state: 'Students manually copy definitions into flashcard apps or passively re-read highlighting slides, resulting in low active-recall rates.',
+    desired_state: 'An automated companion that parses uploaded PDF notes and generates adaptive active-recall flashcards in real time.',
     process_steps: [
-      'Research: Surveyed 200+ students on study habits.',
-      'Analysis: Evaluated existing NLP models for summarization.',
-      'Prototype: Built CLI tool for text extraction.',
-      'Development: Created full-stack web application.',
-      'Testing: Beta test with 50 students during midterms.'
+      { step: 1, title: 'Document Ingestion & Chunking', description: 'Extracted text from multi-page PDFs, cleaning OCR noise and segmenting semantic paragraphs.' },
+      { step: 2, title: 'Embedding & Semantic Search', description: 'Generated vector embeddings indexed in ChromaDB for fast context retrieval.' },
+      { step: 3, title: 'Adaptive Question Generation', description: 'Designed custom prompting templates that generate multiple-choice and open-ended coding questions.' }
     ],
-    desired_state: 'Students should have a centralized tool that not only stores documents but actively assists in synthesizing information into digestible study aids.',
-    solution: 'An AI-powered study assistant that ingests multiple document formats, generates concept maps, and automatically creates spaced-repetition flashcards.',
-    key_result: '40% reduction in study preparation time reported by beta users.',
-    skills: ['Python', 'NLP', 'Machine Learning', 'React'],
-    document_name: 'AI-Study-Assistant-Report.pdf',
-    document_size: '2.4 MB • Technical Documentation',
+    solution: 'Built a full-stack Next.js and FastAPI application with an interactive quiz mode, instant Socratic feedback, and concept visualizers.',
+    result: 'Tested with 150+ students during midterms, showing significant reduction in study prep time.',
+    key_metric: { value: '40%', description: 'Reduction in exam prep time' },
+    skills: ['Python', 'NLP', 'Machine Learning', 'React', 'FastAPI'],
+    screenshots: ['/images/screen1.png', '/images/screen2.png'],
+    document_name: 'ai-study-assistant-architecture.pdf',
+    document_size: '2.4 MB',
     github_url: 'https://github.com/alexchen/ai-study-assistant',
-    live_url: 'https://study-assistant-demo.thedoers.com'
+    live_url: 'https://demo.aistudyassistant.dev',
+    doc_url: 'https://docs.aistudyassistant.dev'
   },
   {
     id: 'p2',
-    title: 'Campus Resource Portal',
-    student_id: 's2',
-    student_name: 'Sarah Johnson',
-    student_program: 'Software Engineering · Year 2',
-    category: 'Web Development',
-    status: 'Draft',
-    last_updated: 'Aug 17, 2026',
-    created_date: 'Aug 14, 2026',
-    short_description: 'A centralized portal for student clubs, campus equipment rentals, and academic advising booking.',
-    skills: ['React', 'Next.js', 'PostgreSQL'],
+    title: 'Smart Home Hub Firmware',
+    student_id: 's1',
+    student_name: 'Alex Chen',
+    student_program: 'Computer Science',
+    category: 'IoT',
+    market: 'Smart Home / IoT',
+    status: 'Published',
+    last_updated: '1 week ago',
+    created_date: 'Feb 05, 2026',
+    short_description: 'Custom firmware for a centralized smart home controller, focusing on low latency and secure local network communication.',
+    skills: ['C++', 'Embedded Systems', 'MQTT', 'FreeRTOS'],
+    github_url: 'https://github.com/alexchen/smart-home-firmware',
+    live_url: 'https://smarthome-demo.dev'
   },
   {
     id: 'p3',
-    title: 'Smart Home Hub Firmware',
-    student_id: 's3',
-    student_name: 'David Kim',
-    student_program: 'Data Science · Year 4',
-    category: 'IoT',
-    status: 'Published',
-    last_updated: 'Aug 15, 2026',
-    created_date: 'Aug 10, 2026',
-    short_description: 'Custom firmware for centralized smart home controllers focusing on ultra-low latency and local execution.',
-    skills: ['C++', 'IoT', 'Embedded Systems'],
-  },
-  {
-    id: 'p4',
-    title: 'Data Analytics Dashboard',
-    student_id: 's4',
-    student_name: 'Maya Patel',
-    student_program: 'Computer Science · Year 3',
-    category: 'Data Science',
-    status: 'Published',
-    last_updated: 'Aug 13, 2026',
-    created_date: 'Aug 05, 2026',
-    short_description: 'Interactive data visualization tool analyzing environmental metrics and carbon emission trends.',
-    skills: ['Python', 'Pandas', 'D3.js'],
-  },
-  {
-    id: 'p5',
-    title: 'EcoCampus Navigation App',
-    student_id: 's5',
-    student_name: 'Jordan Lee',
-    student_program: 'Software Engineering · Year 4',
-    category: 'Mobile Development',
+    title: 'Algorithm Visualizer',
+    student_id: 's1',
+    student_name: 'Alex Chen',
+    student_program: 'Computer Science',
+    category: 'Web Development',
+    market: 'Education / EdTech',
     status: 'Draft',
-    last_updated: 'Aug 11, 2026',
-    created_date: 'Aug 02, 2026',
-    short_description: 'Indoor campus wayfinding app with energy-efficient routing across campus facilities.',
-    skills: ['Swift', 'Mobile', 'GIS'],
+    last_updated: '2 weeks ago',
+    created_date: 'Feb 10, 2026',
+    short_description: 'Interactive web application built with React to help students visualize complex sorting and pathfinding algorithms.',
+    skills: ['React', 'JavaScript', 'HTML5 Canvas', 'TypeScript'],
+    github_url: 'https://github.com/alexchen/algo-visualizer'
   }
 ]
