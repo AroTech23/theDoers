@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { 
   ArrowLeft, 
   ExternalLink, 
@@ -19,7 +20,8 @@ import Button from '@/components/ui/Button';
 import Avatar from '@/components/ui/Avatar';
 import Badge from '@/components/ui/Badge';
 import ProjectCard from '@/components/projects/ProjectCard';
-import { MOCK_PROJECTS, MOCK_DOERS } from '@/lib/mockData';
+import { createClient } from '@/lib/supabase/server';
+import { MOCK_PROJECTS } from '@/lib/mockData';
 
 export default async function ProjectDetailsPage({ 
   params,
@@ -34,10 +36,59 @@ export default async function ProjectDetailsPage({
   const from = resolvedSearchParams?.from;
   const fromProfile = resolvedSearchParams?.fromProfile;
 
-  // Fetch project & author from mockData
-  const project = MOCK_PROJECTS.find(p => p.id === id) || MOCK_PROJECTS[0];
-  const doer = MOCK_DOERS.find(d => d.id === project.doer_id || d.username === fromProfile || d.id === fromProfile) || MOCK_DOERS[0];
-  const moreProjects = MOCK_PROJECTS.filter(p => p.id !== project.id).slice(0, 3);
+  const supabase = await createClient();
+
+  // 1. Fetch live Project from Supabase
+  const { data: dbProject } = await supabase
+    .from('projects')
+    .select('*, doer:users(*)')
+    .eq('id', id)
+    .maybeSingle();
+
+  // Fallback to mockData if id is from mock data (e.g. p1, p2, etc.)
+  const mockFallback = MOCK_PROJECTS.find(p => p.id === id);
+
+  const project = dbProject || (mockFallback ? {
+    ...mockFallback,
+    doer: {
+      id: mockFallback.doer_id,
+      full_name: 'Alex Chen',
+      username: 'alexchen',
+      program: 'Computer Science',
+      year: 'Year 3',
+      bio: 'Software Engineering student interested in AI and distributed systems.',
+      avatar_url: null
+    }
+  } : null);
+
+  if (!project) {
+    return notFound();
+  }
+
+  const doer = project.doer || {
+    id: project.doer_id,
+    full_name: 'Student Engineer',
+    username: 'doer',
+    program: 'Engineering',
+    year: 'Year 3',
+    bio: 'Ethical IT Engineer',
+    avatar_url: null
+  };
+
+  // 2. Fetch more projects by this student
+  let moreProjects: any[] = [];
+  if (dbProject) {
+    const { data: siblingProjects } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('doer_id', project.doer_id)
+      .neq('id', project.id)
+      .eq('status', 'published')
+      .limit(3);
+    moreProjects = siblingProjects || [];
+  } else {
+    moreProjects = MOCK_PROJECTS.filter(p => p.id !== project.id).slice(0, 3);
+  }
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-24 pt-6">
@@ -62,11 +113,11 @@ export default async function ProjectDetailsPage({
           )}
         </div>
 
-        {/* ── 2. PROJECT HEADER (Title, Category, Description, Author Meta, PDF Download) ── */}
+        {/* ── 2. PROJECT HEADER (Title, Category, Description, Author Meta) ── */}
         <div className="bg-white border border-[#E2E8F0] rounded-3xl p-8 lg:p-10 shadow-xs mb-10">
           <div className="flex flex-wrap items-center gap-2.5 mb-4">
             <Badge 
-              label={project.category} 
+              label={project.category || 'General Engineering'} 
               className="text-[#4F46E5] bg-[#EEF2FF] text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-lg" 
             />
             {project.market && (
@@ -100,28 +151,19 @@ export default async function ProjectDetailsPage({
               </div>
             </div>
 
-            {/* Quick CTAs + Download PDF */}
-            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-              <a 
-                href={`#`} 
-                download={`${project.title.toLowerCase().replace(/\s+/g, '-')}-documentation.pdf`}
-                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-[#EEF2FF] hover:bg-[#E0E7FF] text-[#4F46E5] border border-[#C7D2FE] rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs"
-                title="Download Project Case Study Documentation (PDF)"
-              >
-                <Download size={15} /> Download PDF
-              </a>
-
-              {project.live_url && (
-                <a href={project.live_url} target="_blank" rel="noreferrer" className="flex-1 sm:flex-none">
-                  <Button variant="primary" size="md" className="w-full gap-2 font-bold shadow-xs">
-                    <ExternalLink size={15} /> View Live Demo
+            {/* Quick Action Buttons */}
+            <div className="flex items-center gap-3">
+              {project.github_url && (
+                <a href={project.github_url} target="_blank" rel="noreferrer">
+                  <Button variant="outline" size="sm" className="gap-2 font-bold text-xs">
+                    <Code2 size={15} /> Source Code
                   </Button>
                 </a>
               )}
-              {project.github_url && (
-                <a href={project.github_url} target="_blank" rel="noreferrer" className="flex-1 sm:flex-none">
-                  <Button variant="outline" size="md" className="w-full gap-2 font-bold">
-                    <Code2 size={15} /> View GitHub
+              {project.live_url && (
+                <a href={project.live_url} target="_blank" rel="noreferrer">
+                  <Button variant="primary" size="sm" className="gap-2 font-bold text-xs shadow-xs">
+                    <ExternalLink size={15} /> Live Interactive Demo
                   </Button>
                 </a>
               )}
@@ -129,302 +171,253 @@ export default async function ProjectDetailsPage({
           </div>
         </div>
 
-        {/* ── 3. MAIN CASE STUDY CONTENT + SIDEBAR ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+        {/* ── 3. TWO-COLUMN BALANCED CASE STUDY LAYOUT ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          {/* Main Case Study Column (8 Cols) */}
-          <div className="lg:col-span-8 space-y-10">
+          {/* Left Column: Problem, Architecture, Process, Solution, Metrics, Screenshots (8 Cols) */}
+          <div className="lg:col-span-8 space-y-8">
             
-            {/* Visual Cover / System Architecture Banner */}
-            <div className="aspect-video bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#312E81] rounded-3xl p-8 flex flex-col justify-between text-white relative overflow-hidden shadow-sm border border-[#E2E8F0]">
-              <div className="absolute inset-0 bg-[radial-gradient(#4F46E5_1px,transparent_1px)] [background-size:16px_16px] opacity-25"></div>
-              
-              <div className="relative z-10 flex items-center justify-between">
-                <span className="px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-xs font-bold text-white uppercase tracking-wider">
-                  Technical Architecture
-                </span>
-                <span className="text-xs text-white/60 font-mono">theDoers Verified</span>
+            {/* Cover Image Banner */}
+            {project.image_url && (
+              <div className="rounded-3xl overflow-hidden border border-[#E2E8F0] shadow-xs aspect-video bg-slate-100">
+                <img 
+                  src={project.image_url} 
+                  alt={project.title} 
+                  className="w-full h-full object-cover"
+                />
               </div>
-
-              <div className="relative z-10 text-center py-6">
-                <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center mx-auto mb-3 text-white border border-white/20">
-                  <Layers size={28} />
-                </div>
-                <h3 className="text-xl font-bold tracking-tight text-white">{project.title}</h3>
-                <p className="text-xs text-white/70 mt-1">{project.category}</p>
-              </div>
-
-              <div className="relative z-10 flex items-center justify-between text-[11px] text-white/60 pt-4 border-t border-white/10">
-                <span>Production Architecture</span>
-                <span>{project.tags.slice(0, 3).join(' • ')}</span>
-              </div>
-            </div>
-
-            {/* 1. The Problem */}
-            {project.problem && (
-              <section className="bg-white border border-[#E2E8F0] rounded-3xl p-8 shadow-xs">
-                <div className="flex items-center gap-2.5 mb-4 text-[#EF4444]">
-                  <AlertCircle size={22} />
-                  <h2 className="text-2xl font-extrabold text-[#0F172A] tracking-tight">The Problem</h2>
-                </div>
-                <div className="text-sm sm:text-base text-[#334155] leading-relaxed">
-                  <p>{project.problem}</p>
-                </div>
-
-                {project.current_state && (
-                  <div className="mt-6 p-5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#64748B] mb-1.5">
-                      Current State &amp; Inefficiencies
-                    </h4>
-                    <p className="text-xs sm:text-sm text-[#475569] leading-relaxed">
-                      {project.current_state}
-                    </p>
-                  </div>
-                )}
-              </section>
             )}
 
-            {/* 2. Process / Engineering Steps */}
-            {project.process && project.process.length > 0 && (
-              <section className="bg-white border border-[#E2E8F0] rounded-3xl p-8 shadow-xs">
-                <div className="flex items-center gap-2.5 mb-6 text-[#4F46E5]">
-                  <Layers size={22} />
-                  <h2 className="text-2xl font-extrabold text-[#0F172A] tracking-tight">Engineering Process</h2>
+            {/* Section 1: The Problem */}
+            {project.problem && (
+              <div className="bg-white rounded-3xl border border-[#E2E8F0] p-8 shadow-xs">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 rounded-xl bg-[#FEF2F2] text-[#EF4444] flex items-center justify-center">
+                    <AlertCircle size={18} />
+                  </div>
+                  <h2 className="text-xl font-bold text-[#0F172A]">The Problem</h2>
                 </div>
-                
-                <div className="space-y-6">
-                  {project.process.map((step) => (
-                    <div key={step.step} className="flex gap-4 items-start p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0]">
-                      <div className="flex-shrink-0 w-8 h-8 rounded-xl bg-[#EEF2FF] text-[#4F46E5] font-extrabold text-sm flex items-center justify-center border border-[#C7D2FE]">
-                        {step.step}
+                <p className="text-sm text-[#475569] leading-relaxed whitespace-pre-line">
+                  {project.problem}
+                </p>
+
+                {(project.current_state || project.desired_state) && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6 pt-6 border-t border-[#F1F5F9]">
+                    {project.current_state && (
+                      <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0]">
+                        <span className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider block mb-1">Baseline State</span>
+                        <p className="text-xs text-[#334155] leading-relaxed">{project.current_state}</p>
                       </div>
-                      <div>
-                        <h3 className="text-sm sm:text-base font-bold text-[#0F172A] mb-1">
-                          {step.title}
-                        </h3>
-                        <p className="text-xs sm:text-sm text-[#475569] leading-relaxed">
-                          {step.description}
-                        </p>
+                    )}
+                    {project.desired_state && (
+                      <div className="p-4 rounded-2xl bg-[#EEF2FF] border border-[#C7D2FE]">
+                        <span className="text-[11px] font-bold text-[#4F46E5] uppercase tracking-wider block mb-1">Desired Outcome</span>
+                        <p className="text-xs text-[#312E81] leading-relaxed">{project.desired_state}</p>
                       </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Section 2: Engineering Process Steps */}
+            {project.process_steps && project.process_steps.length > 0 && (
+              <div className="bg-white rounded-3xl border border-[#E2E8F0] p-8 shadow-xs">
+                <div className="flex items-center gap-2 mb-6">
+                  <div className="w-8 h-8 rounded-xl bg-[#EEF2FF] text-[#4F46E5] flex items-center justify-center">
+                    <Layers size={18} />
+                  </div>
+                  <h2 className="text-xl font-bold text-[#0F172A]">Engineering Process &amp; Architecture</h2>
+                </div>
+
+                <div className="space-y-4">
+                  {project.process_steps.map((step: any, idx: number) => (
+                    <div key={idx} className="p-5 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="w-6 h-6 rounded-full bg-[#0F172A] text-white text-xs font-bold flex items-center justify-center">
+                          {idx + 1}
+                        </span>
+                        <h3 className="text-sm font-bold text-[#0F172A]">{step.title}</h3>
+                      </div>
+                      <p className="text-xs text-[#64748B] leading-relaxed pl-8">
+                        {step.description}
+                      </p>
                     </div>
                   ))}
                 </div>
-              </section>
+              </div>
             )}
 
-            {/* 3. The Solution */}
+            {/* Section 3: The Solution */}
             {project.solution && (
-              <section className="bg-white border border-[#E2E8F0] rounded-3xl p-8 shadow-xs">
-                <div className="flex items-center gap-2.5 mb-4 text-[#10B981]">
-                  <CheckCircle2 size={22} />
-                  <h2 className="text-2xl font-extrabold text-[#0F172A] tracking-tight">The Solution</h2>
-                </div>
-                <div className="text-sm sm:text-base text-[#334155] leading-relaxed mb-6">
-                  <p>{project.solution}</p>
-                </div>
-
-                {project.desired_state && (
-                  <div className="p-5 bg-[#ECFDF5] border border-[#A7F3D0] rounded-2xl">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#059669] mb-1.5">
-                      Target Outcome Achieved
-                    </h4>
-                    <p className="text-xs sm:text-sm text-[#065F46] leading-relaxed">
-                      {project.desired_state}
-                    </p>
+              <div className="bg-white rounded-3xl border border-[#E2E8F0] p-8 shadow-xs">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 rounded-xl bg-[#ECFDF5] text-[#059669] flex items-center justify-center">
+                    <CheckCircle2 size={18} />
                   </div>
-                )}
-              </section>
+                  <h2 className="text-xl font-bold text-[#0F172A]">The Solution</h2>
+                </div>
+                <p className="text-sm text-[#475569] leading-relaxed whitespace-pre-line">
+                  {project.solution}
+                </p>
+              </div>
             )}
 
-            {/* ── 4. VISUALS: SCREENSHOTS & ARCHITECTURE DIAGRAMS GALLERY ── */}
-            <section className="bg-white border border-[#E2E8F0] rounded-3xl p-8 shadow-xs space-y-6">
-              <div className="flex items-center justify-between border-b border-[#F1F5F9] pb-4">
-                <div className="flex items-center gap-2.5 text-[#4F46E5]">
-                  <LayoutGrid size={22} />
-                  <div>
-                    <h2 className="text-2xl font-extrabold text-[#0F172A] tracking-tight">Screenshots &amp; Architecture</h2>
-                    <p className="text-xs text-[#64748B] mt-0.5">Visual evidence, interface screenshots, and data flows.</p>
-                  </div>
-                </div>
-                <span className="text-xs font-bold text-[#4F46E5] bg-[#EEF2FF] px-3 py-1 rounded-full border border-[#C7D2FE]">
-                  3 Visuals
-                </span>
-              </div>
-
-              {/* Responsive Gallery Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Visual Card 1 */}
-                <div className="group rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] overflow-hidden hover:border-[#CBD5E1] hover:shadow-sm transition-all flex flex-col">
-                  <div className="aspect-video bg-[#EEF2FF] flex flex-col items-center justify-center text-[#4F46E5]/40 group-hover:text-[#4F46E5] transition-colors relative">
-                    <ImageIcon size={36} />
-                    <span className="text-[11px] font-bold mt-2 uppercase tracking-wider">Interface Walkthrough</span>
-                  </div>
-                  <div className="p-3.5 bg-white border-t border-[#E2E8F0]">
-                    <p className="text-xs font-bold text-[#0F172A]">Primary Dashboard &amp; Quiz Engine</p>
-                    <p className="text-[11px] text-[#64748B] mt-0.5">High-fidelity student workflow view</p>
-                  </div>
-                </div>
-
-                {/* Visual Card 2 */}
-                <div className="group rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] overflow-hidden hover:border-[#CBD5E1] hover:shadow-sm transition-all flex flex-col">
-                  <div className="aspect-video bg-[#F0FDF4] flex flex-col items-center justify-center text-[#16A34A]/40 group-hover:text-[#16A34A] transition-colors relative">
-                    <Layers size={36} />
-                    <span className="text-[11px] font-bold mt-2 uppercase tracking-wider">System Architecture</span>
-                  </div>
-                  <div className="p-3.5 bg-white border-t border-[#E2E8F0]">
-                    <p className="text-xs font-bold text-[#0F172A]">Vector Embedding &amp; Retrieval Pipeline</p>
-                    <p className="text-[11px] text-[#64748B] mt-0.5">End-to-end data ingestion schema</p>
-                  </div>
-                </div>
-
-                {/* Visual Card 3 (Full Width Span) */}
-                <div className="sm:col-span-2 group rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] overflow-hidden hover:border-[#CBD5E1] hover:shadow-sm transition-all flex flex-col">
-                  <div className="h-44 bg-[#FAF5FF] flex flex-col items-center justify-center text-[#7C3AED]/40 group-hover:text-[#7C3AED] transition-colors relative">
-                    <TrendingUp size={36} />
-                    <span className="text-[11px] font-bold mt-2 uppercase tracking-wider">Telemetry &amp; Benchmarks</span>
-                  </div>
-                  <div className="p-3.5 bg-white border-t border-[#E2E8F0]">
-                    <p className="text-xs font-bold text-[#0F172A]">Latency &amp; Token Efficiency Analysis</p>
-                    <p className="text-[11px] text-[#64748B] mt-0.5">Benchmark results across 1,000 synthetic test queries</p>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* 5. Results & Key Impact Metric */}
-            {project.result && (
-              <section className="bg-white border border-[#E2E8F0] rounded-3xl p-8 shadow-xs">
-                <div className="flex items-center gap-2.5 mb-4 text-[#4F46E5]">
-                  <Sparkles size={22} />
-                  <h2 className="text-2xl font-extrabold text-[#0F172A] tracking-tight">The Result &amp; Impact</h2>
-                </div>
-                <div className="text-sm sm:text-base text-[#334155] leading-relaxed mb-6">
-                  <p>{project.result}</p>
+            {/* Section 4: Key Results & Quantified Impact */}
+            {(project.result || project.key_metric) && (
+              <div className="bg-gradient-to-br from-[#0F172A] to-[#1E293B] text-white rounded-3xl p-8 shadow-md">
+                <div className="flex items-center gap-2 mb-6">
+                  <TrendingUp size={20} className="text-[#10B981]" />
+                  <h2 className="text-xl font-bold text-white">Results &amp; Impact</h2>
                 </div>
 
                 {project.key_metric && (
-                  <div className="bg-gradient-to-r from-[#EEF2FF] to-[#F5F3FF] border border-[#C7D2FE] rounded-2xl p-6 flex items-center gap-6">
-                    <div className="flex-shrink-0 w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-xs border border-[#E0E7FF] text-[#4F46E5]">
-                      <TrendingUp size={28} />
+                  <div className="p-6 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 mb-6 flex flex-col sm:flex-row sm:items-center gap-4">
+                    <div className="text-4xl sm:text-5xl font-extrabold text-[#10B981] tracking-tight">
+                      {project.key_metric.value}
                     </div>
-                    <div>
-                      <div className="text-3xl font-extrabold text-[#4F46E5] tracking-tight">
-                        {project.key_metric.value}
-                      </div>
-                      <div className="text-xs sm:text-sm font-bold text-[#3730A3] mt-0.5">
-                        {project.key_metric.description}
-                      </div>
+                    <div className="text-sm text-[#E2E8F0] font-medium leading-relaxed">
+                      {project.key_metric.label || project.key_metric.description}
                     </div>
                   </div>
                 )}
-              </section>
+
+                {project.result && (
+                  <p className="text-xs sm:text-sm text-[#CBD5E1] leading-relaxed">
+                    {project.result}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Section 5: Project Screenshots Gallery */}
+            {project.screenshots && project.screenshots.length > 0 && (
+              <div className="bg-white rounded-3xl border border-[#E2E8F0] p-8 shadow-xs space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-xl bg-[#FAF5FF] text-[#9333EA] flex items-center justify-center">
+                    <LayoutGrid size={18} />
+                  </div>
+                  <h2 className="text-xl font-bold text-[#0F172A]">Project Gallery &amp; Screenshots</h2>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                  {project.screenshots.map((img: string, i: number) => (
+                    <div key={i} className="rounded-2xl overflow-hidden border border-[#E2E8F0] aspect-video bg-slate-100 shadow-2xs hover:shadow-md transition-shadow group">
+                      <img src={img} alt={`Screenshot ${i + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
 
           </div>
 
-          {/* Right Sidebar Column (4 Cols) */}
-          <div className="lg:col-span-4 space-y-6 sticky top-24">
+          {/* Right Column: Sticky Sidebar with Meta & Author Bio (4 Cols) */}
+          <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
             
-            {/* Project Specs Card */}
-            <div className="bg-white rounded-3xl border border-[#E2E8F0] p-6 shadow-xs space-y-6">
-              <div>
-                <h3 className="text-xs font-bold text-[#64748B] uppercase tracking-wider mb-1.5">Category</h3>
-                <p className="font-bold text-sm text-[#0F172A]">{project.category}</p>
+            {/* Tech Stack Card */}
+            <div className="bg-white rounded-3xl border border-[#E2E8F0] p-6 shadow-xs space-y-4">
+              <h3 className="text-xs font-bold text-[#0F172A] uppercase tracking-wider">
+                Technologies &amp; Skills
+              </h3>
+              <div className="flex flex-wrap gap-1.5">
+                {project.tags && project.tags.map((tag: string) => (
+                  <Badge 
+                    key={tag} 
+                    label={tag} 
+                    className="bg-[#EEF2FF] text-[#4F46E5] border border-[#C7D2FE] font-bold text-xs px-2.5 py-1 rounded-lg" 
+                  />
+                ))}
               </div>
+            </div>
 
-              {project.market && (
-                <div>
-                  <h3 className="text-xs font-bold text-[#64748B] uppercase tracking-wider mb-1.5">Market / Space</h3>
-                  <p className="font-bold text-sm text-[#0F172A]">{project.market}</p>
-                </div>
+            {/* Deliverables & Links */}
+            <div className="bg-white rounded-3xl border border-[#E2E8F0] p-6 shadow-xs space-y-3">
+              <h3 className="text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-2">
+                Project Deliverables
+              </h3>
+              
+              {project.github_url && (
+                <a 
+                  href={project.github_url} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="flex items-center justify-between p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-xs font-semibold text-[#0F172A] hover:bg-[#EEF2FF] hover:border-[#C7D2FE] transition-colors"
+                >
+                  <span className="flex items-center gap-2"><Code2 size={16} className="text-[#4F46E5]" /> GitHub Repository</span>
+                  <ExternalLink size={13} className="text-[#94A3B8]" />
+                </a>
               )}
 
-              <div>
-                <h3 className="text-xs font-bold text-[#64748B] uppercase tracking-wider mb-2.5">Technologies &amp; Stack</h3>
-                <div className="flex flex-wrap gap-1.5">
-                  {project.tags.map((tag) => (
-                    <Badge 
-                      key={tag} 
-                      label={tag} 
-                      className="bg-[#F1F5F9] text-[#334155] text-xs font-medium px-2.5 py-1 rounded-lg border border-[#E2E8F0]" 
-                    />
-                  ))}
-                </div>
-              </div>
+              {project.live_url && (
+                <a 
+                  href={project.live_url} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="flex items-center justify-between p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-xs font-semibold text-[#0F172A] hover:bg-[#EEF2FF] hover:border-[#C7D2FE] transition-colors"
+                >
+                  <span className="flex items-center gap-2"><ExternalLink size={16} className="text-[#10B981]" /> Live Demo</span>
+                  <ExternalLink size={13} className="text-[#94A3B8]" />
+                </a>
+              )}
 
-              {/* Project Resources with PDF download */}
-              <div>
-                <h3 className="text-xs font-bold text-[#64748B] uppercase tracking-wider mb-3">Project Resources</h3>
-                <div className="space-y-2">
-                  <a 
-                    href={`#`} 
-                    className="flex items-center text-xs font-bold text-[#4F46E5] hover:text-[#3730A3] p-2 rounded-xl hover:bg-[#EEF2FF] transition-colors group"
-                  >
-                    <Download size={14} className="mr-2.5 text-[#4F46E5]" /> Download Case Study PDF
-                  </a>
-                  {project.live_url && (
-                    <a href={project.live_url} target="_blank" rel="noreferrer" className="flex items-center text-xs font-bold text-[#4F46E5] hover:text-[#3730A3] p-2 rounded-xl hover:bg-[#EEF2FF] transition-colors group">
-                      <ExternalLink size={14} className="mr-2.5 text-[#4F46E5]" /> Live Demo
-                    </a>
-                  )}
-                  {project.github_url && (
-                    <a href={project.github_url} target="_blank" rel="noreferrer" className="flex items-center text-xs font-bold text-[#4F46E5] hover:text-[#3730A3] p-2 rounded-xl hover:bg-[#EEF2FF] transition-colors group">
-                      <Code2 size={14} className="mr-2.5 text-[#4F46E5]" /> GitHub Repository
-                    </a>
-                  )}
-                  {project.doc_url && (
-                    <a href={project.doc_url} target="_blank" rel="noreferrer" className="flex items-center text-xs font-bold text-[#4F46E5] hover:text-[#3730A3] p-2 rounded-xl hover:bg-[#EEF2FF] transition-colors group">
-                      <FileText size={14} className="mr-2.5 text-[#4F46E5]" /> Project Documentation
-                    </a>
-                  )}
-                </div>
-              </div>
+              {project.doc_url && (
+                <a 
+                  href={project.doc_url} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="flex items-center justify-between p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-xs font-semibold text-[#0F172A] hover:bg-[#EEF2FF] hover:border-[#C7D2FE] transition-colors"
+                >
+                  <span className="flex items-center gap-2"><FileText size={16} className="text-[#4F46E5]" /> Documentation / PDF</span>
+                  <ExternalLink size={13} className="text-[#94A3B8]" />
+                </a>
+              )}
             </div>
 
-            {/* About Student Card */}
-            <div className="bg-white rounded-3xl border border-[#E2E8F0] p-6 shadow-xs text-center flex flex-col items-center">
-              <Avatar name={doer.full_name} imageUrl={doer.avatar_url} size="lg" className="w-20 h-20 shadow-xs mb-3" />
-              <h4 className="text-lg font-bold text-[#0F172A]">{doer.full_name}</h4>
-              <p className="text-xs font-bold text-[#4F46E5] mt-0.5">{doer.program} · {doer.year}</p>
+            {/* Author Profile Summary */}
+            <div className="bg-white rounded-3xl border border-[#E2E8F0] p-6 shadow-xs space-y-4">
+              <h3 className="text-xs font-bold text-[#0F172A] uppercase tracking-wider">
+                About the Student
+              </h3>
               
-              <p className="text-xs text-[#64748B] my-4 line-clamp-3 leading-relaxed">
-                {doer.bio}
+              <div className="flex items-center gap-3">
+                <Avatar name={doer.full_name} imageUrl={doer.avatar_url} size="lg" className="w-14 h-14" />
+                <div>
+                  <h4 className="font-bold text-[#0F172A] text-sm">{doer.full_name}</h4>
+                  <p className="text-xs text-[#64748B]">{doer.program} · {doer.year}</p>
+                </div>
+              </div>
+
+              <p className="text-xs text-[#64748B] leading-relaxed">
+                {doer.bio || doer.headline || 'Software engineering student passionate about building impactful technical solutions.'}
               </p>
-              
-              <Link href={`/doers/${doer.username || doer.id}`} className="w-full">
-                <Button variant="outline" size="sm" className="w-full font-bold text-xs py-2">
-                  View Full Portfolio ↗
-                </Button>
-              </Link>
+
+              <div className="pt-2">
+                <Link href={`/doers/${doer.username || doer.id}`}>
+                  <Button variant="outline" size="sm" className="w-full font-bold text-xs">
+                    View Full Portfolio ↗
+                  </Button>
+                </Link>
+              </div>
             </div>
 
           </div>
 
         </div>
 
-        {/* ── 5. MORE PROJECTS FROM THE SAME DOER (3-Column Grid) ── */}
-        <div className="mt-20 pt-12 border-t border-[#E2E8F0]">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-2xl font-extrabold text-[#0F172A] tracking-tight">
-                More from {doer.full_name}
-              </h2>
-              <p className="text-xs text-[#64748B] mt-0.5">Explore additional engineering case studies by this student.</p>
+        {/* ── 4. MORE PROJECTS BY THIS DOER ── */}
+        {moreProjects.length > 0 && (
+          <div className="mt-16 pt-12 border-t border-[#E2E8F0]">
+            <h2 className="text-2xl font-extrabold text-[#0F172A] tracking-tight mb-6">
+              More from {doer.full_name}
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {moreProjects.map((p) => (
+                <ProjectCard key={p.id} project={p} authorId={doer.username || doer.id} />
+              ))}
             </div>
-            <Link 
-              href={`/doers/${doer.username || doer.id}`}
-              className="text-xs font-bold text-[#4F46E5] hover:underline"
-            >
-              View all ({MOCK_PROJECTS.length}) →
-            </Link>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {moreProjects.map((p) => (
-              <ProjectCard key={p.id} project={p} authorId={doer.username || doer.id} />
-            ))}
-          </div>
-        </div>
+        )}
 
       </div>
     </div>
