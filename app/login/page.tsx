@@ -18,9 +18,17 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     setTimeout(() => {
-      if (email.includes('admin')) {
+      if (email.toLowerCase().includes('admin')) {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('thedoers_auth_role', 'admin');
+          localStorage.setItem('thedoers_user_name', 'Admin');
+        }
         router.push('/admin');
       } else {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('thedoers_auth_role', 'doer');
+          localStorage.setItem('thedoers_user_name', 'Alex Chen');
+        }
         router.push('/dashboard');
       }
     }, 400);
@@ -33,7 +41,7 @@ export default function LoginPage() {
       <main className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8">
         <div className="w-full max-w-4xl bg-white rounded-3xl shadow-sm border border-[#E2E8F0] overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[520px]">
           
-          {/* Left Hero & Proof-of-Work Spotlight (5 Cols) - Eliminates empty white void */}
+          {/* Left Hero & Proof-of-Work Spotlight (5 Cols) */}
           <div className="lg:col-span-5 bg-gradient-to-br from-[#EEF2FF] via-[#F5F3FF] to-[#FAF5FF] p-8 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-[#E2E8F0] relative overflow-hidden">
             <div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/90 backdrop-blur-sm border border-[#E2E8F0] rounded-full text-xs font-bold text-[#4F46E5] shadow-2xs mb-6">
@@ -59,52 +67,47 @@ export default function LoginPage() {
               </div>
               <div className="flex items-center gap-2.5 text-xs text-[#334155] font-semibold bg-white/80 p-2.5 rounded-xl border border-[#E2E8F0]/70">
                 <ShieldCheck size={16} className="text-[#4F46E5] shrink-0" />
-                <span>Admin Verified Student Community</span>
+                <span>Verified Code &amp; Architecture Vetting</span>
               </div>
             </div>
 
-            <div className="pt-2 border-t border-[#E2E8F0]/60 flex items-center justify-between text-[11px] text-[#64748B]">
-              <span>theDoers Platform</span>
-              <span>Douala, CM</span>
+            {/* Quote Badge */}
+            <div className="pt-4 border-t border-[#E2E8F0]/60">
+              <p className="text-[11px] text-[#64748B] italic">
+                &ldquo;Your projects are your credentials. Build out in the open.&rdquo;
+              </p>
             </div>
           </div>
 
-          {/* Right Form Section (7 Cols) */}
-          <div className="lg:col-span-7 p-8 sm:p-10 flex flex-col justify-center">
+          {/* Right Login Form (7 Cols) */}
+          <div className="lg:col-span-7 p-8 sm:p-12 flex flex-col justify-center">
             <div className="max-w-md w-full mx-auto">
               <div className="mb-6">
-                <h1 className="text-2xl font-extrabold text-[#0F172A] tracking-tight">
-                  Welcome back
-                </h1>
-                <p className="text-xs text-[#64748B] mt-1">
-                  Log in to manage your engineering projects and portfolio.
-                </p>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight">Welcome back</h1>
+                <p className="text-xs text-[#64748B] mt-1">Log in to manage your projects, credentials, and portfolio.</p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-[#334155] mb-1.5 uppercase tracking-wider">
+                  <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5">
                     Email Address *
                   </label>
                   <input
                     type="email"
                     required
+                    placeholder="alex@example.com or admin@thedoers.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="alex@example.com"
-                    className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
+                    className="w-full px-4 py-2.5 text-xs border border-[#E2E8F0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5] text-[#0F172A]"
                   />
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-xs font-bold text-[#334155] uppercase tracking-wider">
+                  <div className="flex justify-between items-center mb-1.5">
+                    <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider">
                       Password *
                     </label>
-                    <Link
-                      href="/forgot-password"
-                      className="text-xs font-semibold text-[#4F46E5] hover:text-[#3730A3] transition-colors"
-                    >
+                    <Link href="/forgot-password" tabIndex={-1} className="text-xs text-[#4F46E5] font-bold hover:underline">
                       Forgot password?
                     </Link>
                   </div>
@@ -112,17 +115,18 @@ export default function LoginPage() {
                     <input
                       type={showPassword ? 'text' : 'password'}
                       required
+                      placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
+                      className="w-full px-4 py-2.5 text-xs border border-[#E2E8F0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5] text-[#0F172A]"
                     />
                     <button
                       type="button"
+                      tabIndex={-1}
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#0F172A] cursor-pointer"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#0F172A]"
                     >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
                 </div>
@@ -131,37 +135,41 @@ export default function LoginPage() {
                   <Button
                     type="submit"
                     variant="primary"
-                    size="md"
+                    size="lg"
                     isLoading={isLoading}
-                    className="w-full py-2.5 font-bold text-sm shadow-xs"
+                    className="w-full font-bold shadow-xs"
                   >
-                    Log In <ArrowRight size={14} className="ml-1.5" />
+                    Log In <ArrowRight size={15} className="ml-1" />
                   </Button>
                 </div>
               </form>
 
-              <div className="my-6 flex items-center gap-3">
-                <div className="flex-1 h-px bg-[#E2E8F0]" />
-                <span className="text-xs text-[#94A3B8] font-medium uppercase tracking-wider">or</span>
-                <div className="flex-1 h-px bg-[#E2E8F0]" />
+              {/* Demo Credentials Helper Pill */}
+              <div className="mt-5 p-3 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] text-[11px] text-[#64748B] flex items-center justify-between">
+                <span>Try admin: <strong className="text-[#4F46E5]">admin@thedoers.com</strong></span>
+                <span className="text-[#94A3B8]">•</span>
+                <span>Doer: <strong className="text-[#0F172A]">alex@example.com</strong></span>
               </div>
 
-              <p className="text-center text-xs text-[#64748B]">
-                Don&apos;t have an account?{' '}
-                <Link href="/register" className="font-bold text-[#4F46E5] hover:underline">
-                  Create Portfolio
-                </Link>
-              </p>
+              <div className="mt-6 pt-5 border-t border-[#F1F5F9] text-center">
+                <p className="text-xs text-[#64748B]">
+                  Don&apos;t have an account?{' '}
+                  <Link href="/register" className="text-[#4F46E5] font-bold hover:underline">
+                    Create Portfolio
+                  </Link>
+                </p>
+              </div>
             </div>
           </div>
 
         </div>
       </main>
 
-      <footer className="py-5 px-6 border-t border-[#E2E8F0] bg-white flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#64748B]">
-        <div className="font-semibold text-[#0F172A]">theDoers</div>
-        <div>© {new Date().getFullYear()} theDoers. All rights reserved.</div>
-        <div className="flex gap-4 font-medium">
+      <footer className="py-6 px-6 md:px-12 border-t border-[#E2E8F0] flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-[#64748B] bg-white">
+        <div className="font-bold text-[#0F172A]">theDoers</div>
+        <div>© 2024 theDoers. All rights reserved.</div>
+        <div className="flex gap-4">
+          <Link href="/about" className="hover:text-[#0F172A]">About Us</Link>
           <Link href="#" className="hover:text-[#0F172A]">Terms of Service</Link>
           <Link href="#" className="hover:text-[#0F172A]">Privacy Policy</Link>
           <Link href="#" className="hover:text-[#0F172A]">Support</Link>
