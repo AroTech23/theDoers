@@ -25,13 +25,13 @@ export default function Footer() {
           <div>
             <Link href="/" className="flex items-center gap-2.5 text-lg font-bold text-[#111827] group">
               <img src="/logo-icon.png" alt="theDoers logo" className="h-7 w-auto object-contain group-hover:scale-105 transition-transform" />
-              <span>theDoers.com</span>
+              <span>theDoers</span>
             </Link>
             <p className="mt-2 text-sm text-[#6B7280]">
               Discover students by what they can do.
             </p>
             <p className="mt-4 text-xs text-[#9CA3AF]">
-              © {new Date().getFullYear()} theDoers.com
+              &copy; {new Date().getFullYear()} theDoers
             </p>
           </div>
 

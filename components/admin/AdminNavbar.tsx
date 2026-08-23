@@ -20,7 +20,7 @@ export default function AdminNavbar() {
         <div className="flex items-center gap-10">
           <Link href="/" className="flex items-center gap-2.5 text-xl font-bold text-[#111827] hover:text-[#4F46E5] transition-colors group">
             <img src="/logo-icon.png" alt="theDoers logo" className="h-8 w-auto object-contain group-hover:scale-105 transition-transform" />
-            <span>theDoers<span className="text-[#4F46E5]">.com</span></span>
+            <span>theDoers</span>
           </Link>
 
           <nav className="flex items-center gap-1">

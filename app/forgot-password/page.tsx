@@ -218,7 +218,7 @@ export default function ForgotPasswordPage() {
       </main>
 
       <footer className="py-5 px-6 border-t border-[#E2E8F0] bg-white flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#64748B]">
-        <div className="font-semibold text-[#0F172A]">theDoers.com</div>
+        <div className="font-semibold text-[#0F172A]">theDoers</div>
         <div>© {new Date().getFullYear()} theDoers. All rights reserved.</div>
         <div className="flex gap-4 font-medium">
           <Link href="#" className="hover:text-[#0F172A]">Terms of Service</Link>
