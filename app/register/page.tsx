@@ -19,7 +19,8 @@ import {
   Sparkles,
   ArrowRight,
   Edit3,
-  AlertCircle
+  AlertCircle,
+  Clock
 } from 'lucide-react';
 import AuthNavbar from '@/components/layout/AuthNavbar';
 import Button from '@/components/ui/Button';
@@ -191,11 +192,11 @@ export default function RegisterPage() {
         }
       }
 
-      // 4. Store session role & cookies for instant seamless access
+      // Do NOT auto-login as Doer because student registration is in 'pending' review state
       if (typeof window !== 'undefined') {
-        localStorage.setItem('thedoers_auth_role', 'doer');
-        localStorage.setItem('thedoers_user_name', formData.name.trim());
-        document.cookie = "thedoers_auth_role=doer; path=/; max-age=604800; SameSite=Lax;";
+        localStorage.removeItem('thedoers_auth_role');
+        localStorage.removeItem('thedoers_user_name');
+        document.cookie = "thedoers_auth_role=; path=/; max-age=0;";
       }
 
       setIsSubmitted(true);
@@ -634,19 +635,19 @@ export default function RegisterPage() {
                   </div>
                 </>
               ) : (
-                /* Post-Submission Success State */
+                /* Post-Submission Success State (Pending Admin Approval) */
                 <div className="text-center py-8 space-y-4">
-                  <div className="w-16 h-16 rounded-full bg-[#ECFDF5] text-[#059669] flex items-center justify-center mx-auto shadow-sm">
-                    <CheckCircle2 size={36} />
+                  <div className="w-16 h-16 rounded-full bg-[#FEF3C7] text-[#D97706] flex items-center justify-center mx-auto shadow-2xs border border-[#FDE68A]">
+                    <Clock size={32} />
                   </div>
-                  <h3 className="text-2xl font-extrabold text-[#0F172A]">Portfolio Submitted Successfully!</h3>
+                  <h3 className="text-2xl font-extrabold text-[#0F172A]">Portfolio Submitted for Approval!</h3>
                   <p className="text-xs sm:text-sm text-[#64748B] max-w-md mx-auto leading-relaxed">
-                    Your account has been created in Supabase. You can now log into your Doer dashboard to start showcasing your engineering projects.
+                    Thank you for applying to <strong className="text-[#0F172A]">theDoers</strong>! Your student application is currently <strong className="text-[#D97706]">Pending Admin Review</strong>. Once approved by our moderation team, you will be able to log in and start showcasing your projects.
                   </p>
                   <div className="pt-4 flex justify-center gap-3">
-                    <Link href="/dashboard">
+                    <Link href="/">
                       <Button variant="primary" size="lg" className="font-bold shadow-xs">
-                        Go to Doer Dashboard →
+                        Return to Homepage →
                       </Button>
                     </Link>
                   </div>

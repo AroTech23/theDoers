@@ -47,16 +47,30 @@ export default function LoginPage() {
         .maybeSingle();
 
       const role = profile?.role || (email.toLowerCase().includes('admin') ? 'admin' : 'doer');
+      const status = profile?.status || 'pending';
       const fullName = profile?.full_name || user.user_metadata?.full_name || 'Doer';
 
-      // 3. Set Session in LocalStorage & Cookies
+      // 3. Block Pending & Suspended Doers from accessing Dashboard
+      if (role !== 'admin') {
+        if (status === 'pending') {
+          // Log user out from Supabase Auth session
+          await supabase.auth.signOut();
+          throw new Error('Your portfolio is currently pending admin review. You will receive access once approved.');
+        }
+        if (status === 'rejected' || status === 'suspended') {
+          await supabase.auth.signOut();
+          throw new Error('Your account is currently suspended. Please contact platform support.');
+        }
+      }
+
+      // 4. Set Verified Session in LocalStorage & Cookies
       if (typeof window !== 'undefined') {
         localStorage.setItem('thedoers_auth_role', role);
         localStorage.setItem('thedoers_user_name', fullName);
         document.cookie = `thedoers_auth_role=${role}; path=/; max-age=604800; SameSite=Lax;`;
       }
 
-      // 4. Route based on verified role
+      // 5. Route based on verified role
       if (role === 'admin') {
         router.push('/admin');
       } else {
