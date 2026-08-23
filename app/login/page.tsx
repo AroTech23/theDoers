@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Sparkles, CheckCircle2, ShieldCheck, ArrowRight, AlertCircle, X } from 'lucide-react';
+import { Eye, EyeOff, Sparkles, CheckCircle2, ShieldCheck, ArrowRight, AlertCircle, X, Loader2 } from 'lucide-react';
 import AuthNavbar from '@/components/layout/AuthNavbar';
 import Button from '@/components/ui/Button';
 import { createClient } from '@/lib/supabase/client';
@@ -17,6 +17,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Auto-dismiss popup toast error after 5 seconds
   useEffect(() => {
@@ -32,6 +33,7 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     setErrorMessage(null);
+    setSuccessMessage(null);
 
     try {
       // 1. Authenticate with Supabase Auth
@@ -85,15 +87,20 @@ export default function LoginPage() {
         document.cookie = `thedoers_auth_role=${role}; path=/; max-age=604800; SameSite=Lax;`;
       }
 
-      // 5. Route based on verified role
-      if (role === 'admin') {
-        router.push('/admin');
-      } else {
-        router.push('/dashboard');
-      }
+      // 5. Show Success Toast Notification Popup
+      setSuccessMessage(`Welcome back, ${fullName}! Successfully logged in.`);
+
+      // 6. Route based on verified role with brief delay for user feedback
+      setTimeout(() => {
+        if (role === 'admin') {
+          router.push('/admin');
+        } else {
+          router.push('/dashboard');
+        }
+      }, 1000);
+
     } catch (err: any) {
       setErrorMessage(err.message || 'Invalid email or password.');
-    } finally {
       setIsLoading(false);
     }
   };
@@ -102,7 +109,22 @@ export default function LoginPage() {
     <div className="min-h-screen flex flex-col bg-[#F8FAFC] relative">
       <AuthNavbar rightLink={{ label: 'Create Portfolio', href: '/register' }} />
 
-      {/* Floating Animated Toast Notification Popup (Matches theDoers Design System) */}
+      {/* Floating Success Toast Notification Popup */}
+      {successMessage && (
+        <div className="fixed top-20 right-6 z-50 max-w-md w-full animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="bg-white p-4 rounded-2xl shadow-xl border border-[#A7F3D0] flex items-center gap-3.5">
+            <div className="w-9 h-9 rounded-xl bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0] flex items-center justify-center flex-shrink-0">
+              <CheckCircle2 size={20} />
+            </div>
+            <div className="flex-1">
+              <p className="text-xs font-bold text-[#0F172A] tracking-tight">Successfully Logged In</p>
+              <p className="text-xs text-[#059669] font-medium leading-relaxed mt-0.5">{successMessage}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Error Toast Notification Popup */}
       {errorMessage && (
         <div className="fixed top-20 right-6 z-50 max-w-md w-full animate-in fade-in slide-in-from-top-4 duration-300">
           <div className="bg-white p-4 rounded-2xl shadow-lg border border-[#FCA5A5] flex items-start gap-3.5">
@@ -140,36 +162,36 @@ export default function LoginPage() {
               </p>
             </div>
 
-            {/* Feature Highlights */}
             <div className="space-y-3 my-6">
-              <div className="flex items-center gap-2.5 text-xs text-[#334155] font-semibold bg-white/80 p-2.5 rounded-xl border border-[#E2E8F0]/70">
-                <CheckCircle2 size={16} className="text-[#10B981] shrink-0" />
-                <span>Deep Problem → Solution Case Studies</span>
+              <div className="flex items-center gap-3 p-3 bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-2xl">
+                <div className="w-7 h-7 rounded-lg bg-[#EEF2FF] text-[#4F46E5] flex items-center justify-center font-bold text-xs">
+                  ✓
+                </div>
+                <span className="text-xs font-semibold text-[#0F172A]">Problem-to-Solution Case Studies</span>
               </div>
-              <div className="flex items-center gap-2.5 text-xs text-[#334155] font-semibold bg-white/80 p-2.5 rounded-xl border border-[#E2E8F0]/70">
-                <CheckCircle2 size={16} className="text-[#10B981] shrink-0" />
-                <span>Live Shareable Portfolio URL</span>
-              </div>
-              <div className="flex items-center gap-2.5 text-xs text-[#334155] font-semibold bg-white/80 p-2.5 rounded-xl border border-[#E2E8F0]/70">
-                <ShieldCheck size={16} className="text-[#4F46E5] shrink-0" />
-                <span>Verified Code &amp; Architecture Vetting</span>
+              <div className="flex items-center gap-3 p-3 bg-white/80 backdrop-blur-sm border border-[#E2E8F0] rounded-2xl">
+                <div className="w-7 h-7 rounded-lg bg-[#EEF2FF] text-[#4F46E5] flex items-center justify-center font-bold text-xs">
+                  ✓
+                </div>
+                <span className="text-xs font-semibold text-[#0F172A]">Direct Contact &amp; Public Portfolio</span>
               </div>
             </div>
 
-            {/* Quote Badge */}
-            <div className="pt-4 border-t border-[#E2E8F0]/60">
-              <p className="text-[11px] text-[#64748B] italic">
-                &ldquo;Your projects are your credentials. Build out in the open.&rdquo;
-              </p>
-            </div>
+            <p className="text-[11px] text-[#94A3B8] font-medium">
+              theDoers © {new Date().getFullYear()} · Proof of work platform.
+            </p>
           </div>
 
-          {/* Right Login Form (7 Cols) */}
-          <div className="lg:col-span-7 p-8 sm:p-12 flex flex-col justify-center">
-            <div className="max-w-md w-full mx-auto">
+          {/* Right Form Container (7 Cols) */}
+          <div className="lg:col-span-7 p-8 sm:p-10 flex flex-col justify-center">
+            <div className="max-w-md mx-auto w-full">
               <div className="mb-6">
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight">Welcome back</h1>
-                <p className="text-xs text-[#64748B] mt-1">Log in to manage your projects, credentials, and portfolio.</p>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight">
+                  Welcome back
+                </h1>
+                <p className="text-xs sm:text-sm text-[#64748B] mt-1">
+                  Log in to manage your engineering projects and public portfolio.
+                </p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -180,19 +202,22 @@ export default function LoginPage() {
                   <input
                     type="email"
                     required
-                    placeholder="Enter your email address"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-4 py-2.5 text-xs border border-[#E2E8F0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5] text-[#0F172A]"
+                    placeholder="e.g. developerp070@gmail.com"
+                    className="w-full rounded-xl border border-[#E2E8F0] px-4 py-2.5 text-xs sm:text-sm text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:border-transparent transition-all"
                   />
                 </div>
 
                 <div>
-                  <div className="flex justify-between items-center mb-1.5">
+                  <div className="flex items-center justify-between mb-1.5">
                     <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider">
                       Password *
                     </label>
-                    <Link href="/forgot-password" tabIndex={-1} className="text-xs text-[#4F46E5] font-bold hover:underline">
+                    <Link
+                      href="/forgot-password"
+                      className="text-xs font-semibold text-[#4F46E5] hover:text-[#3730A3] transition-colors"
+                    >
                       Forgot password?
                     </Link>
                   </div>
@@ -200,16 +225,15 @@ export default function LoginPage() {
                     <input
                       type={showPassword ? 'text' : 'password'}
                       required
-                      placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full px-4 py-2.5 text-xs border border-[#E2E8F0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5] text-[#0F172A]"
+                      placeholder="••••••••"
+                      className="w-full rounded-xl border border-[#E2E8F0] px-4 py-2.5 text-xs sm:text-sm text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:border-transparent pr-10 transition-all"
                     />
                     <button
                       type="button"
-                      tabIndex={-1}
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#0F172A]"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#0F172A] transition-colors p-1"
                     >
                       {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
@@ -222,18 +246,18 @@ export default function LoginPage() {
                     variant="primary"
                     size="lg"
                     isLoading={isLoading}
-                    className="w-full font-bold shadow-xs"
+                    className="w-full font-bold text-xs sm:text-sm shadow-xs justify-center"
                   >
-                    Log In <ArrowRight size={15} className="ml-1" />
+                    {successMessage ? 'Redirecting...' : 'Log In →'}
                   </Button>
                 </div>
               </form>
 
-              <div className="mt-6 pt-5 border-t border-[#F1F5F9] text-center">
+              <div className="mt-8 pt-6 border-t border-[#F1F5F9] text-center">
                 <p className="text-xs text-[#64748B]">
-                  Don&apos;t have an account?{' '}
-                  <Link href="/register" className="text-[#4F46E5] font-bold hover:underline">
-                    Create Portfolio
+                  Don&apos;t have a portfolio account yet?{' '}
+                  <Link href="/register" className="font-bold text-[#4F46E5] hover:text-[#3730A3] transition-colors">
+                    Create Portfolio →
                   </Link>
                 </p>
               </div>
@@ -242,17 +266,6 @@ export default function LoginPage() {
 
         </div>
       </main>
-
-      <footer className="py-6 px-6 md:px-12 border-t border-[#E2E8F0] flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-[#64748B] bg-white">
-        <div className="font-bold text-[#0F172A]">theDoers</div>
-        <div>© 2024 theDoers. All rights reserved.</div>
-        <div className="flex gap-4">
-          <Link href="/about" className="hover:text-[#0F172A]">About Us</Link>
-          <Link href="#" className="hover:text-[#0F172A]">Terms of Service</Link>
-          <Link href="#" className="hover:text-[#0F172A]">Privacy Policy</Link>
-          <Link href="#" className="hover:text-[#0F172A]">Support</Link>
-        </div>
-      </footer>
     </div>
   );
 }
