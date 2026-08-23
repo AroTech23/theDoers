@@ -23,7 +23,8 @@ import {
   Clock,
   Sparkles,
   Loader2,
-  FolderKanban
+  FolderKanban,
+  AlertCircle
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { MOCK_ADMIN_STUDENTS, MOCK_ADMIN_PROJECTS } from '@/lib/adminData';
@@ -39,6 +40,7 @@ export default function AdminStudentDetailsPage() {
   const [student, setStudent] = useState<any>(null);
   const [skills, setSkills] = useState<string[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadStudentDetails() {
@@ -82,7 +84,7 @@ export default function AdminStudentDetailsPage() {
           setSkills(['Python', 'React', 'Machine Learning']);
           setProjects(MOCK_ADMIN_PROJECTS.slice(0, 2));
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error loading student details:', err);
       } finally {
         setLoading(false);
@@ -96,15 +98,21 @@ export default function AdminStudentDetailsPage() {
     if (!student) return;
     try {
       setUpdating(true);
+      setErrorMessage(null);
+
       const { error } = await supabase
         .from('users')
         .update({ status: newStatus })
         .eq('id', student.id);
 
-      if (error) throw error;
+      if (error) {
+        throw new Error(error.message || 'Failed to update student status. Please ensure admin RLS policy is executed in Supabase.');
+      }
+
       setStudent({ ...student, status: newStatus });
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error updating status:', err);
+      setErrorMessage(err.message || 'Failed to update status.');
     } finally {
       setUpdating(false);
     }
@@ -149,10 +157,18 @@ export default function AdminStudentDetailsPage() {
         <span className="text-xs text-[#64748B] font-mono">Student ID: {student.id}</span>
       </div>
 
+      {/* Error Alert */}
+      {errorMessage && (
+        <div className="p-4 rounded-2xl bg-[#FEF2F2] border border-[#FCA5A5] flex items-center gap-3 text-xs font-semibold text-[#B91C1C]">
+          <AlertCircle size={18} className="shrink-0 text-[#EF4444]" />
+          <span>{errorMessage}</span>
+        </div>
+      )}
+
       {/* ── 2. TOP BANNER CARD (Quick Overview & Live Moderation Controls) ── */}
       <div className="bg-white border border-[#E2E8F0] rounded-3xl p-6 sm:p-8 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
         <div className="flex items-center gap-5">
-          <Avatar name={student.full_name} size="lg" className="w-16 h-16 sm:w-20 sm:h-20 text-xl shadow-xs" />
+          <Avatar name={student.full_name} imageUrl={student.avatar_url} size="lg" className="w-16 h-16 sm:w-20 sm:h-20 text-xl shadow-xs rounded-full" />
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight">{student.full_name}</h1>
@@ -207,7 +223,7 @@ export default function AdminStudentDetailsPage() {
                 isLoading={updating}
                 className="font-bold text-xs border-[#FCA5A5] text-[#EF4444] hover:bg-[#FEF2F2]"
               >
-                <ShieldAlert size={14} className="mr-1.5" /> Suspend Account
+                <ShieldAlert size={14} className="mr-1.5" /> Suspend Student
               </Button>
             </>
           )}
@@ -220,7 +236,7 @@ export default function AdminStudentDetailsPage() {
               isLoading={updating}
               className="font-bold text-xs shadow-xs bg-[#10B981] hover:bg-[#059669]"
             >
-              <CheckCircle2 size={16} className="mr-1.5" /> Re-Activate Account
+              <CheckCircle2 size={16} className="mr-1.5" /> Re-Activate Student
             </Button>
           )}
         </div>
