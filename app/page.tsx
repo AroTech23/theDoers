@@ -1,11 +1,14 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Button from '@/components/ui/Button'
 import DoerCard from '@/components/doers/DoerCard'
 import Badge from '@/components/ui/Badge'
-import { Search, ArrowRight } from 'lucide-react'
+import { Search, ArrowRight, LayoutDashboard, Plus, ShieldCheck } from 'lucide-react'
 import { User } from '@/types'
 
-// Mock featured doers — replace with Supabase query later
+// Mock featured doers
 const featuredDoers: (User & { skills: { name: string }[] })[] = [
   {
     id: '1', email: '', full_name: 'Jane Doe', username: 'janedoe',
@@ -43,6 +46,17 @@ const popularSkills = [
 ]
 
 export default function HomePage() {
+  const [authRole, setAuthRole] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setAuthRole(localStorage.getItem('thedoers_auth_role'))
+    }
+  }, [])
+
+  const isDoer = authRole === 'doer'
+  const isAdmin = authRole === 'admin'
+
   return (
     <div className="flex flex-col">
 
@@ -50,7 +64,7 @@ export default function HomePage() {
       <section className="max-w-[1440px] mx-auto px-6 md:px-8 lg:px-12 py-16 lg:py-20 w-full">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
 
-          {/* Left: Copy */}
+          {/* Left: Copy & Role-Aware CTAs */}
           <div className="flex flex-col gap-6">
             <div>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[#0F172A] tracking-tight leading-tight">
@@ -71,18 +85,33 @@ export default function HomePage() {
               />
             </div>
 
-            {/* CTAs */}
+            {/* Role-Aware CTAs */}
             <div className="flex gap-3 flex-wrap">
               <Link href="/doers">
                 <Button variant="primary" size="lg" className="font-bold shadow-xs">
                   Explore Doers
                 </Button>
               </Link>
-              <Link href="/register">
-                <Button variant="outline" size="lg" className="font-bold">
-                  Become a Doer
-                </Button>
-              </Link>
+
+              {isAdmin ? (
+                <Link href="/admin">
+                  <Button variant="outline" size="lg" className="font-bold gap-2 text-[#4F46E5] border-[#C7D2FE] bg-[#EEF2FF]/60 hover:bg-[#EEF2FF]">
+                    <ShieldCheck size={18} /> Admin Dashboard →
+                  </Button>
+                </Link>
+              ) : isDoer ? (
+                <Link href="/dashboard">
+                  <Button variant="outline" size="lg" className="font-bold gap-2 text-[#0F172A] border-[#E2E8F0] hover:bg-[#F8FAFC]">
+                    <LayoutDashboard size={18} /> Go to Dashboard →
+                  </Button>
+                </Link>
+              ) : (
+                <Link href="/register">
+                  <Button variant="outline" size="lg" className="font-bold">
+                    Become a Doer
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
 
@@ -150,18 +179,57 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── CTA Section ── */}
+      {/* ── Role-Aware Bottom CTA Section ── */}
       <section className="max-w-[1440px] mx-auto px-6 md:px-8 lg:px-12 mb-16 w-full">
         <div className="rounded-3xl bg-gradient-to-br from-[#F8FAFC] to-[#EEF2FF] border border-[#E2E8F0] py-14 px-8 text-center">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight mb-2">
-            Ready to Show What You Can Do?
-          </h2>
-          <p className="text-xs sm:text-sm text-[#64748B] mb-6 max-w-md mx-auto leading-relaxed">
-            Create your Doer profile, showcase your skills, and let your work speak for you.
-          </p>
-          <Link href="/register">
-            <Button variant="primary" size="lg" className="font-bold shadow-xs">Become a Doer</Button>
-          </Link>
+          {isDoer ? (
+            <>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight mb-2">
+                Keep Your Portfolio &amp; Projects Updated
+              </h2>
+              <p className="text-xs sm:text-sm text-[#64748B] mb-6 max-w-md mx-auto leading-relaxed">
+                Add your latest case studies, metrics, architecture diagrams, and repositories to stay top-of-mind.
+              </p>
+              <div className="flex justify-center gap-3">
+                <Link href="/dashboard/projects/new">
+                  <Button variant="primary" size="lg" className="font-bold shadow-xs gap-2">
+                    <Plus size={16} /> Add New Project
+                  </Button>
+                </Link>
+                <Link href="/dashboard">
+                  <Button variant="outline" size="lg" className="font-bold border-[#E2E8F0]">
+                    Manage Projects
+                  </Button>
+                </Link>
+              </div>
+            </>
+          ) : isAdmin ? (
+            <>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight mb-2">
+                theDoers Administration Center
+              </h2>
+              <p className="text-xs sm:text-sm text-[#64748B] mb-6 max-w-md mx-auto leading-relaxed">
+                Review pending student submissions, moderate case studies, and audit community quality.
+              </p>
+              <Link href="/admin">
+                <Button variant="primary" size="lg" className="font-bold shadow-xs gap-2">
+                  <ShieldCheck size={16} /> Enter Admin Command Center
+                </Button>
+              </Link>
+            </>
+          ) : (
+            <>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight mb-2">
+                Ready to Show What You Can Do?
+              </h2>
+              <p className="text-xs sm:text-sm text-[#64748B] mb-6 max-w-md mx-auto leading-relaxed">
+                Create your Doer profile, showcase your skills, and let your work speak for you.
+              </p>
+              <Link href="/register">
+                <Button variant="primary" size="lg" className="font-bold shadow-xs">Become a Doer</Button>
+              </Link>
+            </>
+          )}
         </div>
       </section>
 
