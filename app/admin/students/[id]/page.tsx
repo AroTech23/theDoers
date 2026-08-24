@@ -118,14 +118,6 @@ export default function AdminStudentDetailsPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3">
-        <Loader2 size={32} className="animate-spin text-[#4F46E5]" />
-        <p className="text-xs font-bold text-[#64748B]">Loading student application profile...</p>
-      </div>
-    );
-  }
 
   if (!student) {
     return (

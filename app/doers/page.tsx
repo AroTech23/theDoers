@@ -105,14 +105,6 @@ function ExploreDoersContent() {
     selectedYear !== 'All Years' ||
     selectedSkill !== null
 
-  if (loading) {
-    return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3">
-        <Loader2 size={32} className="animate-spin text-[#4F46E5]" />
-        <p className="text-xs font-bold text-[#64748B]">Discovering talented student engineers...</p>
-      </div>
-    )
-  }
 
   return (
     <div className="w-full max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10 flex flex-col gap-6 sm:gap-8">
