@@ -281,8 +281,8 @@ export default function AboutUsPage() {
             ) : isDoer ? (
               <>
                 <Link href="/dashboard/projects/new">
-                  <Button variant="primary" size="lg" className="font-bold shadow-xs">
-                    <Plus size={16} className="mr-1.5" /> + Add Project
+                  <Button variant="primary" size="lg" className="font-bold shadow-xs flex items-center gap-1.5">
+                    <Plus size={16} /> Add Project
                   </Button>
                 </Link>
                 <Link href="/dashboard">

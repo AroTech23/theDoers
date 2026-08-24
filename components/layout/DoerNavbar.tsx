@@ -240,7 +240,7 @@ export default function DoerNavbar() {
             onClick={() => setMobileMenuOpen(false)}
             className="flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl text-xs font-bold bg-[#0F172A] text-white shadow-2xs mt-2"
           >
-            <Plus size={15} /> + Add Project
+            <Plus size={15} /> Add Project
           </Link>
           <Link
             href="/"
