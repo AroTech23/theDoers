@@ -45,7 +45,7 @@ export default function AboutUsPage() {
       avatarBg: 'bg-[#4F46E5]',
       icon: Cloud,
       github: 'https://github.com/AroTech23',
-      linkedin: 'https://linkedin.com'
+      linkedin: 'https://linkedin.com/in/python-development-64a413337'
     },
     {
       name: 'Peace Ndukwo Ikechukwu John Kalu',
