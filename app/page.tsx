@@ -93,10 +93,10 @@ export default function HomePage() {
                 Proof of Work Over Paper Resumes
               </p>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[#0F172A] tracking-tight leading-tight">
-                See What Students Are <span className="text-[#4F46E5]">Building.</span>
+                DISCOVER ETHICALLY SKILLED ENGINEERS  <span className="text-[#4F46E5]">AND INNOVATORS</span>
               </h1>
               <p className="mt-4 text-base sm:text-lg text-[#64748B] leading-relaxed max-w-lg">
-                Discover the next generation of engineers, designers, and innovators through real case studies, architecture diagrams, and live demos. Explore their work and connect with the people behind the ideas.
+                Meet the next generation of engineers, designers, and innovators through real case studies, architecture diagrams, and live demos. Explore their work and connect with the people behind the ideas.
               </p>
             </div>
 
