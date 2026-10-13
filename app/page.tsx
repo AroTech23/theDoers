@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Button from '@/components/ui/Button'
 import DoerCard from '@/components/doers/DoerCard'
 import Badge from '@/components/ui/Badge'
-import { Search, ArrowRight, LayoutDashboard, Plus, ShieldCheck, Sparkles, Loader2 } from 'lucide-react'
+import { Search, ArrowRight, LayoutDashboard, Plus, ShieldCheck, Sparkles, Loader2, BookOpen } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { MOCK_DOERS } from '@/lib/mockData'
 
@@ -89,9 +89,13 @@ export default function HomePage() {
           {/* Left: Copy & Role-Aware CTAs */}
           <div className="flex flex-col gap-6">
             <div>
-              <p className="text-xs sm:text-sm font-bold uppercase tracking-widest text-[#4F46E5] mb-3">
-                Proof of Work Over Paper Resumes
-              </p>
+              <Link
+                href="/manifesto"
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0F172A] text-white hover:bg-[#1E293B] text-xs font-mono font-bold transition-all shadow-xs w-fit mb-3"
+              >
+                <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
+                <span>THE MOVEMENT // Read Manifesto &amp; Magazine Issue 01 →</span>
+              </Link>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[#0F172A] tracking-tight leading-tight">
                 Discover Ethically Skilled Engineers  <span className="text-[#4F46E5]">And Innovators</span>
               </h1>
@@ -205,6 +209,36 @@ export default function HomePage() {
             {doers.map((doer) => (
               <DoerCard key={doer.id} doer={doer} />
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── The Doers Magazine Spotlight ── */}
+      <section className="py-16 bg-[#0F172A] text-white border-t border-[#1E293B]">
+        <div className="max-w-[1440px] mx-auto px-6 md:px-8 lg:px-12 flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="space-y-3 max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-xs font-mono text-[#818CF8]">
+              <BookOpen size={13} /> The Doers Magazine · Issue 01
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white">
+              The Architecture of Student Innovation
+            </h2>
+            <p className="text-sm text-[#94A3B8] leading-relaxed">
+              Explore deep architectural case studies by top student engineers. From cloud automation and distributed consensus engines to modern data pipelines.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0">
+            <Link href="/magazine">
+              <Button variant="primary" size="lg" className="font-bold shadow-xs">
+                Read Issue 01 <ArrowRight size={15} className="ml-1" />
+              </Button>
+            </Link>
+            <Link href="/manifesto">
+              <Button variant="outline" size="lg" className="font-bold border-[#334155] text-white hover:bg-white/10">
+                The Manifesto
+              </Button>
+            </Link>
           </div>
         </div>
       </section>

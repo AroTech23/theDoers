@@ -57,6 +57,16 @@ export default function Footer() {
             <h4 className="text-sm font-semibold text-[#111827] mb-3">Platform</h4>
             <ul className="space-y-2">
               <li>
+                <Link href="/magazine" className="text-sm text-[#6B7280] hover:text-[#4F46E5] transition-colors">
+                  The Doers Magazine
+                </Link>
+              </li>
+              <li>
+                <Link href="/manifesto" className="text-sm text-[#6B7280] hover:text-[#4F46E5] transition-colors">
+                  The Manifesto
+                </Link>
+              </li>
+              <li>
                 <Link href="/about" className="text-sm text-[#6B7280] hover:text-[#4F46E5] transition-colors">
                   About Us
                 </Link>

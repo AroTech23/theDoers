@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Avatar from '@/components/ui/Avatar';
+import DoerBadge from '@/components/ui/DoerBadge';
 import {
   Copy,
   Check,
@@ -183,17 +184,21 @@ export default function DashboardPage() {
               </Link>
             </div>
 
-            {/* Three Key Metrics in Compact Card Grid */}
-            <div className="grid grid-cols-3 gap-2 sm:gap-4 py-3 px-3 sm:px-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl text-center">
+            {/* Four Key Metrics in Compact Card Grid including Contact Telemetry */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 py-3 px-3 sm:px-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl text-center">
               <div>
                 <div className="text-xl sm:text-2xl font-extrabold text-[#0F172A]">{publishedCount}</div>
                 <div className="text-[10px] sm:text-xs font-semibold text-[#64748B] mt-0.5">Published</div>
               </div>
-              <div className="border-x border-[#E2E8F0]">
+              <div className="border-l sm:border-x border-[#E2E8F0]">
+                <div className="text-xl sm:text-2xl font-extrabold text-[#4F46E5]">{profile?.contact_count ?? 0}</div>
+                <div className="text-[10px] sm:text-xs font-bold text-[#4F46E5] mt-0.5">Inquiries</div>
+              </div>
+              <div>
                 <div className="text-xl sm:text-2xl font-extrabold text-[#0F172A]">{draftCount}</div>
                 <div className="text-[10px] sm:text-xs font-semibold text-[#64748B] mt-0.5">Drafts</div>
               </div>
-              <div>
+              <div className="border-l border-[#E2E8F0]">
                 <div className="text-xl sm:text-2xl font-extrabold text-[#0F172A]">{skills.length}</div>
                 <div className="text-[10px] sm:text-xs font-semibold text-[#64748B] mt-0.5">Skills</div>
               </div>
@@ -216,6 +221,11 @@ export default function DashboardPage() {
                   </span>
                 )}
               </div>
+            </div>
+
+            {/* Movement Credential / Markdown Badge Embed */}
+            <div className="pt-2">
+              <DoerBadge variant="markdown" username={username} name={fullName} />
             </div>
           </div>
 

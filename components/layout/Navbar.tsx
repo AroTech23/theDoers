@@ -87,6 +87,8 @@ function NavbarContent() {
   }
 
   const isDoersActive = pathname === '/doers' || pathname?.startsWith('/doers/')
+  const isMagazineActive = pathname === '/magazine' || pathname?.startsWith('/magazine/')
+  const isManifestoActive = pathname === '/manifesto'
   const isAboutActive = pathname === '/about'
 
   return (
@@ -104,7 +106,7 @@ function NavbarContent() {
           <div className="hidden md:flex items-center gap-2">
             <Link
               href="/doers"
-              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-150 cursor-pointer ${
+              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-150 cursor-pointer ${
                 isDoersActive
                   ? 'bg-[#EEF2FF] text-[#4F46E5] shadow-2xs font-bold'
                   : 'text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC]'
@@ -113,8 +115,28 @@ function NavbarContent() {
               Doers
             </Link>
             <Link
+              href="/magazine"
+              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-150 cursor-pointer ${
+                isMagazineActive
+                  ? 'bg-[#EEF2FF] text-[#4F46E5] shadow-2xs font-bold'
+                  : 'text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC]'
+              }`}
+            >
+              Magazine
+            </Link>
+            <Link
+              href="/manifesto"
+              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-150 cursor-pointer ${
+                isManifestoActive
+                  ? 'bg-[#EEF2FF] text-[#4F46E5] shadow-2xs font-bold'
+                  : 'text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC]'
+              }`}
+            >
+              Manifesto
+            </Link>
+            <Link
               href="/about"
-              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-150 cursor-pointer ${
+              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-150 cursor-pointer ${
                 isAboutActive
                   ? 'bg-[#EEF2FF] text-[#4F46E5] shadow-2xs font-bold'
                   : 'text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC]'
@@ -245,6 +267,20 @@ function NavbarContent() {
             className="text-sm font-semibold text-[#0F172A] py-2 border-b border-[#F1F5F9]"
           >
             Doers
+          </Link>
+          <Link
+            href="/magazine"
+            onClick={() => setMenuOpen(false)}
+            className="text-sm font-semibold text-[#0F172A] py-2 border-b border-[#F1F5F9]"
+          >
+            Magazine
+          </Link>
+          <Link
+            href="/manifesto"
+            onClick={() => setMenuOpen(false)}
+            className="text-sm font-semibold text-[#0F172A] py-2 border-b border-[#F1F5F9]"
+          >
+            Manifesto
           </Link>
           <Link
             href="/about"
