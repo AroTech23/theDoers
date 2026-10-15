@@ -26,6 +26,7 @@ import AuthNavbar from '@/components/layout/AuthNavbar';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Avatar from '@/components/ui/Avatar';
+import SkillPicker from '@/components/ui/SkillPicker';
 import { createClient } from '@/lib/supabase/client';
 
 const steps = ['Account', 'Profile', 'Skills & Links', 'Review'];
@@ -390,8 +391,6 @@ export default function RegisterPage() {
                     <option>Year 1</option>
                     <option>Year 2</option>
                     <option>Year 3</option>
-                    <option>Year 4</option>
-                    <option>Master&apos;s</option>
                   </select>
                 </div>
               </div>
@@ -445,31 +444,14 @@ export default function RegisterPage() {
                 <p className="text-xs text-[#64748B] mt-0.5">Add your technologies and external profile links for recruiter discovery.</p>
               </div>
 
-              {/* Skills Tag Input */}
-              <div>
-                <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5">Technical Skills ({skills.length}/10)</label>
-                <div className="flex flex-wrap gap-2 mb-3 p-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl min-h-[52px]">
-                  {skills.map((skill) => (
-                    <span key={skill} className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-[#C7D2FE] text-[#4F46E5] font-bold text-xs rounded-xl shadow-2xs">
-                      {skill}
-                      <button type="button" onClick={() => removeSkill(skill)} className="text-[#94A3B8] hover:text-[#EF4444]">
-                        <X size={13} />
-                      </button>
-                    </span>
-                  ))}
-                  {skills.length === 0 && (
-                    <span className="text-xs text-[#94A3B8] italic self-center">No skills added yet. Type below and press Enter.</span>
-                  )}
-                </div>
-                <input
-                  type="text"
-                  placeholder="Type a skill (e.g. Docker, Rust, PyTorch) and press Enter..."
-                  value={skillInput}
-                  onChange={(e) => setSkillInput(e.target.value)}
-                  onKeyDown={handleAddSkill}
-                  className="w-full px-4 py-2.5 text-xs border border-[#E2E8F0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4F46E5] text-[#0F172A]"
-                />
-              </div>
+              {/* Curated Predefined Skills Picker */}
+              <SkillPicker
+                selectedSkills={skills}
+                onChange={setSkills}
+                maxSkills={10}
+                label="Technical Skills"
+                helperText="Select from vetted software engineering and data technologies to build your verified stack."
+              />
 
               {/* Connected Links Grid */}
               <div>

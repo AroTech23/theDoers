@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
+import SkillPicker from '@/components/ui/SkillPicker';
 import { createClient } from '@/lib/supabase/client';
 
 const STEPS = [
@@ -453,27 +454,13 @@ function CreateProjectWizard() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-[#0F172A] uppercase tracking-wider mb-1.5">Skills &amp; Technologies Used ({tags.length}/10)</label>
-                <div className="p-2.5 flex flex-wrap gap-2 rounded-xl border border-[#E2E8F0] focus-within:ring-2 focus-within:ring-[#4F46E5] bg-white">
-                  {tags.map((tag, i) => (
-                    <span key={i} className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#EEF2FF] text-[#4F46E5] border border-[#C7D2FE]">
-                      {tag}
-                      <button type="button" onClick={() => removeTag(i)} className="ml-1.5 text-[#4F46E5] hover:text-[#3730A3]">
-                        <X size={12} />
-                      </button>
-                    </span>
-                  ))}
-                  <input
-                    type="text"
-                    value={tagInput}
-                    onChange={(e) => setTagInput(e.target.value)}
-                    onKeyDown={addTag}
-                    placeholder="Type technology & press Enter (e.g. Rust, ESP32)..."
-                    className="flex-1 min-w-[160px] outline-none text-[#0F172A] text-xs py-1"
-                  />
-                </div>
-              </div>
+              <SkillPicker
+                selectedSkills={tags}
+                onChange={setTags}
+                maxSkills={10}
+                label="Skills & Technologies Used"
+                helperText="Select the approved engineering tools, libraries, and frameworks implemented in this project."
+              />
 
               {/* Cover Image Upload (From Local Computer or URL) */}
               <div>

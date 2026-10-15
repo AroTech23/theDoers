@@ -5,7 +5,7 @@ import { ButtonHTMLAttributes, forwardRef } from 'react'
 import { Loader2 } from 'lucide-react'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'outline' | 'ghost' | 'dark'
+  variant?: 'primary' | 'outline' | 'ghost' | 'dark' | 'outline-light'
   size?: 'sm' | 'md' | 'lg'
   isLoading?: boolean
 }
@@ -26,6 +26,10 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             // Outline (#E2E8F0 border -> #CBD5E1 on hover -> #0F172A text)
             'border border-[#E2E8F0] text-[#0F172A] bg-white hover:bg-[#F9FAFB] hover:border-[#CBD5E1] active:bg-[#F1F5F9] focus:ring-4 focus:ring-[#EEF2FF] focus:outline-none disabled:border-[#E2E8F0] disabled:text-[#CBD5E1] disabled:bg-[#F1F5F9]':
               variant === 'outline',
+
+            // Outline Light (for dark backgrounds: transparent with white border & text)
+            'border-2 border-white/60 text-white bg-transparent hover:bg-white/15 hover:border-white active:bg-white/20 focus:ring-4 focus:ring-white/20 focus:outline-none':
+              variant === 'outline-light',
 
             // Ghost (Text primary -> #EEF2FF light hover)
             'text-[#4F46E5] hover:bg-[#EEF2FF] active:bg-[#E0E7FF] focus:ring-4 focus:ring-[#EEF2FF] focus:outline-none disabled:text-[#CBD5E1]':

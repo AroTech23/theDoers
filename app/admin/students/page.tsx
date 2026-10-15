@@ -17,7 +17,7 @@ export default function AdminStudentsPage() {
   const [selectedStatus, setSelectedStatus] = useState('All Statuses');
 
   const programs = ['All Programs', 'Computer Science', 'Software Engineering', 'Data Science & AI', 'Interactive Design & HCI', 'Cybersecurity', 'Information Systems'];
-  const years = ['All Years', 'Year 1', 'Year 2', 'Year 3', 'Year 4', "Master's"];
+  const years = ['All Years', 'Year 1', 'Year 2', 'Year 3'];
   const statuses = ['All Statuses', 'approved', 'pending', 'suspended'];
 
   useEffect(() => {

@@ -86,30 +86,30 @@ export default function MagazinePage() {
           </p>
         </div>
 
-        {/* ── 2. FEATURED COVER STORY ── */}
-        <div className="bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A] text-white rounded-3xl p-8 sm:p-12 border border-[#1E293B] shadow-xl relative overflow-hidden">
+        {/* ── 2. FEATURED COVER STORY (High-Contrast Editorial Card) ── */}
+        <div className="bg-white rounded-3xl p-8 sm:p-12 border-2 border-[#E2E8F0] shadow-sm relative overflow-hidden group hover:border-[#CBD5E1] transition-all">
           <div className="relative z-10 max-w-3xl space-y-6">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 bg-white/10 rounded-full text-xs font-mono text-[#A5B4FC]">
-              <Sparkles size={14} /> Cover Story Feature
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#EEF2FF] text-[#4F46E5] font-bold rounded-full text-xs font-mono border border-[#C7D2FE] shadow-2xs">
+              <Sparkles size={14} className="text-[#4F46E5]" /> Cover Story Feature · Seven International University
             </div>
 
-            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#0F172A] tracking-tight leading-tight">
               Seven International University: <br className="hidden sm:inline" />
               How Student Builders Are Killing the Resume
             </h2>
 
-            <p className="text-sm sm:text-base text-[#94A3B8] leading-relaxed">
+            <p className="text-sm sm:text-base text-[#334155] leading-relaxed">
               In an era of generic degrees, students at Seven International University are skipping conventional resume padding. By deploying full-scale cloud platforms, distributed algorithms, and analytical pipelines, they are defining a new standard of verified engineering competence.
             </p>
 
             <div className="pt-2 flex items-center gap-4 flex-wrap">
               <Link href="/about">
-                <Button variant="primary" size="md" className="font-bold shadow-xs">
-                  Read Founder Journey <ArrowRight size={14} className="ml-1" />
+                <Button variant="primary" size="lg" className="font-bold shadow-xs">
+                  Read Founder Journey <ArrowRight size={15} className="ml-1" />
                 </Button>
               </Link>
               <Link href="/manifesto">
-                <Button variant="outline" size="md" className="font-bold border-[#334155] text-white hover:bg-white/10">
+                <Button variant="dark" size="lg" className="font-bold shadow-xs">
                   Read The Manifesto
                 </Button>
               </Link>

@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import Avatar from '@/components/ui/Avatar';
 import Button from '@/components/ui/Button';
+import SkillPicker from '@/components/ui/SkillPicker';
 import { createClient } from '@/lib/supabase/client';
 
 export default function EditProfilePage() {
@@ -377,8 +378,6 @@ export default function EditProfilePage() {
                       <option>Year 1</option>
                       <option>Year 2</option>
                       <option>Year 3</option>
-                      <option>Year 4</option>
-                      <option>Master&apos;s</option>
                     </select>
                   </div>
                 </div>
@@ -421,32 +420,13 @@ export default function EditProfilePage() {
 
             {/* Technical Skills Card */}
             <div className="bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-xs">
-              <div className="flex justify-between items-center mb-1">
-                <h2 className="text-base font-bold text-[#0F172A]">Skills &amp; Technologies</h2>
-                <span className="text-[10px] text-[#64748B]">{skills.length}/10 added</span>
-              </div>
-              <p className="text-xs text-[#64748B] mb-4">
-                Add skills and frameworks that highlight your engineering abilities.
-              </p>
-
-              <div className="p-3 flex flex-wrap gap-2 rounded-xl border border-[#E2E8F0] focus-within:ring-2 focus-within:ring-[#4F46E5] bg-white mb-2">
-                {skills.map((skill, i) => (
-                  <span key={i} className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#EEF2FF] text-[#4F46E5] border border-[#C7D2FE]">
-                    {skill}
-                    <button type="button" onClick={() => removeSkill(i)} className="ml-1.5 text-[#4F46E5] hover:text-[#3730A3]">
-                      <X size={12} />
-                    </button>
-                  </span>
-                ))}
-                <input
-                  type="text"
-                  value={skillInput}
-                  onChange={(e) => setSkillInput(e.target.value)}
-                  onKeyDown={addSkill}
-                  placeholder="Type a skill & press Enter..."
-                  className="flex-1 min-w-[140px] outline-none text-[#0F172A] text-xs py-1"
-                />
-              </div>
+              <SkillPicker
+                selectedSkills={skills}
+                onChange={setSkills}
+                maxSkills={10}
+                label="Skills & Technologies"
+                helperText="Select vetted skills from our engineering directory to highlight on your verified public portfolio."
+              />
             </div>
 
           </div>

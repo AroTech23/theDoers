@@ -18,7 +18,7 @@ const programs = [
   'Cybersecurity'
 ]
 
-const years = ['All Years', 'Year 1', 'Year 2', 'Year 3', 'Year 4']
+const years = ['All Years', 'Year 1', 'Year 2', 'Year 3']
 
 function ExploreDoersContent() {
   const searchParams = useSearchParams()

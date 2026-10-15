@@ -235,7 +235,7 @@ export default function HomePage() {
               </Button>
             </Link>
             <Link href="/manifesto">
-              <Button variant="outline" size="lg" className="font-bold border-[#334155] text-white hover:bg-white/10">
+              <Button variant="outline-light" size="lg" className="font-bold">
                 The Manifesto
               </Button>
             </Link>
