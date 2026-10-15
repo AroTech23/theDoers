@@ -89,13 +89,6 @@ export default function HomePage() {
           {/* Left: Copy & Role-Aware CTAs */}
           <div className="flex flex-col gap-6">
             <div>
-              <Link
-                href="/manifesto"
-                className="inline-flex items-center gap-2 px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-[#0F172A] text-white hover:bg-[#1E293B] text-[11px] sm:text-xs font-mono font-bold transition-all shadow-xs w-fit mb-3"
-              >
-                <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse shrink-0" />
-                <span>THE MOVEMENT // Read Manifesto &amp; Magazine Issue 01 →</span>
-              </Link>
               <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-[#0F172A] tracking-tight leading-tight">
                 Discover Ethically Skilled Engineers  <span className="text-[#4F46E5]">And Innovators</span>
               </h1>
