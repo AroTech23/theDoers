@@ -34,7 +34,7 @@ export default function ProjectCard({ project, authorId }: ProjectCardProps) {
       </div>
 
       {/* Content */}
-      <div className="p-6 flex flex-col flex-1 gap-3">
+      <div className="p-5 sm:p-6 flex flex-col flex-1 gap-3">
         {project.category && (
           <span className="text-[11px] font-bold tracking-wider text-[#4F46E5] uppercase">
             {project.category}

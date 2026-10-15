@@ -12,10 +12,10 @@ interface DoerCardProps {
 
 export default function DoerCard({ doer }: DoerCardProps) {
   return (
-    <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 flex flex-col items-center text-center gap-4 hover:border-[#CBD5E1] hover:shadow-md transition-all duration-200 group relative">
+    <div className="bg-white border border-[#E2E8F0] rounded-2xl p-5 sm:p-6 flex flex-col items-center text-center gap-4 hover:border-[#CBD5E1] hover:shadow-md transition-all duration-200 group relative">
       
       {/* Verified Movement Badge on top right */}
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-3 right-3 sm:top-4 sm:right-4">
         <DoerBadge variant="compact" />
       </div>
 

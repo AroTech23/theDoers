@@ -160,7 +160,7 @@ export default function DoerBadge({
   // Markdown variant for GitHub Readmes
   return (
     <div className={`p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl flex flex-col gap-2.5 ${className}`}>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="text-xs font-bold text-[#0F172A] flex items-center gap-2">
           <VerifiedBadgeEmblem size={16} /> Embed Badge on GitHub / Portfolio
         </span>

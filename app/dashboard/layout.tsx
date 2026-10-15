@@ -13,9 +13,9 @@ export default function DashboardLayout({
         {children}
       </main>
       <footer className="w-full bg-white border-t border-[#E5E7EB] py-6 mt-auto">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
           <div className="text-sm font-bold text-[#111827]">theDoers</div>
-          <div className="flex items-center gap-6 text-sm text-[#6B7280]">
+          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs sm:text-sm text-[#6B7280]">
             <Link href="/terms" className="hover:text-[#111827]">Terms</Link>
             <Link href="/privacy" className="hover:text-[#111827]">Privacy</Link>
             <Link href="/support" className="hover:text-[#111827]">Support</Link>

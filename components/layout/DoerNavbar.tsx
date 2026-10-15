@@ -207,7 +207,7 @@ export default function DoerNavbar() {
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-white border-b border-[#E2E8F0] px-6 py-4 flex flex-col gap-3 shadow-lg animate-in slide-in-from-top-2">
+        <div className="md:hidden bg-white border-b border-[#E2E8F0] px-4 sm:px-6 py-4 flex flex-col gap-2.5 shadow-lg animate-in slide-in-from-top-2">
           <Link
             href="/dashboard"
             onClick={() => setMobileMenuOpen(false)}

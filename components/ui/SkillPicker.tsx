@@ -232,7 +232,7 @@ export default function SkillPicker({
           </div>
 
           {/* Category Tabs */}
-          <div className="flex flex-wrap gap-1.5 border-b border-[#F1F5F9] pb-3">
+          <div className="flex overflow-x-auto pb-2 scrollbar-none gap-1.5 border-b border-[#F1F5F9] -mx-1 px-1 sm:flex-wrap sm:overflow-visible">
             {PREDEFINED_SKILL_CATEGORIES.map((cat) => {
               const isCatActive = cat.name === activeCategory
               return (
@@ -240,7 +240,7 @@ export default function SkillPicker({
                   key={cat.name}
                   type="button"
                   onClick={() => setActiveCategory(cat.name)}
-                  className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 sm:shrink min-h-[32px] ${
                     isCatActive
                       ? 'bg-[#0F172A] text-white shadow-xs'
                       : 'bg-[#F8FAFC] text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9]'
@@ -271,13 +271,13 @@ export default function SkillPicker({
                         addSkill(skill)
                       }
                     }}
-                    className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs ${
+                    className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs min-h-[34px] ${
                       isSelected
                         ? 'bg-[#4F46E5] text-white ring-2 ring-[#818CF8]'
                         : 'bg-[#F8FAFC] text-[#334155] border border-[#E2E8F0] hover:border-[#4F46E5] hover:text-[#4F46E5]'
                     }`}
                   >
-                    {isSelected ? <Check size={12} /> : <Plus size={12} />}
+                    {isSelected ? <Check size={13} /> : <Plus size={13} />}
                     <span>{skill}</span>
                   </button>
                 )

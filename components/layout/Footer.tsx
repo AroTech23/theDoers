@@ -19,10 +19,10 @@ export default function Footer() {
 
   return (
     <footer className="bg-white border-t border-[#E2E8F0] mt-auto">
-      <div className="w-full px-6 md:px-8 lg:px-12 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="w-full px-4 sm:px-6 md:px-8 lg:px-12 py-10 sm:py-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
           {/* Brand */}
-          <div>
+          <div className="sm:col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-2.5 text-lg font-bold text-[#111827] group">
               <img src="/logo-icon.png" alt="theDoers logo" className="h-7 w-auto object-contain group-hover:scale-105 transition-transform" />
               <span>theDoers</span>

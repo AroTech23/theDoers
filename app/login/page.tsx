@@ -125,7 +125,7 @@ function LoginForm() {
 
       {/* Floating Logout Success Toast Notification Popup */}
       {logoutMessage && (
-        <div className="fixed top-20 right-6 z-50 max-w-md w-full animate-in fade-in slide-in-from-top-4 duration-300">
+        <div className="fixed top-20 left-4 right-4 sm:left-auto sm:right-6 z-50 sm:max-w-md animate-in fade-in slide-in-from-top-4 duration-300">
           <div className="bg-white p-4 rounded-2xl shadow-xl border border-[#C7D2FE] flex items-center gap-3.5">
             <div className="w-9 h-9 rounded-xl bg-[#EEF2FF] text-[#4F46E5] border border-[#C7D2FE] flex items-center justify-center shrink-0">
               <LogOut size={18} />
@@ -146,7 +146,7 @@ function LoginForm() {
 
       {/* Floating Login Success Toast Notification Popup */}
       {successMessage && (
-        <div className="fixed top-20 right-6 z-50 max-w-md w-full animate-in fade-in slide-in-from-top-4 duration-300">
+        <div className="fixed top-20 left-4 right-4 sm:left-auto sm:right-6 z-50 sm:max-w-md animate-in fade-in slide-in-from-top-4 duration-300">
           <div className="bg-white p-4 rounded-2xl shadow-xl border border-[#A7F3D0] flex items-center gap-3.5">
             <div className="w-9 h-9 rounded-xl bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0] flex items-center justify-center shrink-0">
               <CheckCircle2 size={20} />
@@ -161,7 +161,7 @@ function LoginForm() {
 
       {/* Floating Error Toast Notification Popup */}
       {errorMessage && (
-        <div className="fixed top-20 right-6 z-50 max-w-md w-full animate-in fade-in slide-in-from-top-4 duration-300">
+        <div className="fixed top-20 left-4 right-4 sm:left-auto sm:right-6 z-50 sm:max-w-md animate-in fade-in slide-in-from-top-4 duration-300">
           <div className="bg-white p-4 rounded-2xl shadow-lg border border-[#FCA5A5] flex items-start gap-3.5">
             <div className="w-8 h-8 rounded-xl bg-[#FEF2F2] text-[#EF4444] border border-[#FECACA] flex items-center justify-center shrink-0 mt-0.5">
               <AlertCircle size={18} />
@@ -184,7 +184,7 @@ function LoginForm() {
         <div className="w-full max-w-4xl bg-white rounded-3xl shadow-sm border border-[#E2E8F0] overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[520px]">
           
           {/* Left Hero & Proof-of-Work Spotlight (5 Cols) */}
-          <div className="lg:col-span-5 bg-gradient-to-br from-[#EEF2FF] via-[#F5F3FF] to-[#FAF5FF] p-8 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-[#E2E8F0] relative overflow-hidden">
+          <div className="lg:col-span-5 bg-gradient-to-br from-[#EEF2FF] via-[#F5F3FF] to-[#FAF5FF] p-5 sm:p-8 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-[#E2E8F0] relative overflow-hidden">
             <div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/90 backdrop-blur-sm border border-[#E2E8F0] rounded-full text-xs font-bold text-[#4F46E5] shadow-2xs mb-6">
                 <Sparkles size={13} /> Ethical IT Engineers
@@ -218,7 +218,7 @@ function LoginForm() {
           </div>
 
           {/* Right Form Container (7 Cols) */}
-          <div className="lg:col-span-7 p-8 sm:p-10 flex flex-col justify-center">
+          <div className="lg:col-span-7 p-5 sm:p-8 sm:p-10 flex flex-col justify-center">
             <div className="max-w-md mx-auto w-full">
               <div className="mb-6">
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight">

@@ -93,20 +93,20 @@ function NavbarContent() {
 
   return (
     <nav className="w-full bg-white border-b border-[#E2E8F0] sticky top-0 z-50 h-16">
-      <div className="w-full px-6 md:px-8 lg:px-12 h-full flex items-center justify-between">
+      <div className="w-full px-4 sm:px-6 md:px-8 lg:px-12 h-full flex items-center justify-between">
         
         {/* Left Side: Logo & Tabs */}
-        <div className="flex items-center gap-12 lg:gap-14 h-full">
-          <Link href="/" className="flex items-center gap-2.5 text-xl font-bold text-[#0F172A] hover:text-[#4F46E5] transition-colors group">
-            <img src="/logo-icon.png" alt="theDoers logo" className="h-8 w-auto object-contain group-hover:scale-105 transition-transform" />
+        <div className="flex items-center gap-4 md:gap-6 lg:gap-12 h-full">
+          <Link href="/" className="flex items-center gap-2.5 text-lg sm:text-xl font-bold text-[#0F172A] hover:text-[#4F46E5] transition-colors group shrink-0">
+            <img src="/logo-icon.png" alt="theDoers logo" className="h-7 sm:h-8 w-auto object-contain group-hover:scale-105 transition-transform" />
             <span>theDoers</span>
           </Link>
 
-          {/* Desktop Nav Tabs */}
-          <div className="hidden md:flex items-center gap-2">
+          {/* Desktop & Tablet Nav Tabs */}
+          <div className="hidden md:flex items-center gap-1 lg:gap-2">
             <Link
               href="/doers"
-              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-150 cursor-pointer ${
+              className={`px-2.5 lg:px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-150 cursor-pointer ${
                 isDoersActive
                   ? 'bg-[#EEF2FF] text-[#4F46E5] shadow-2xs font-bold'
                   : 'text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC]'
@@ -116,7 +116,7 @@ function NavbarContent() {
             </Link>
             <Link
               href="/magazine"
-              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-150 cursor-pointer ${
+              className={`px-2.5 lg:px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-150 cursor-pointer ${
                 isMagazineActive
                   ? 'bg-[#EEF2FF] text-[#4F46E5] shadow-2xs font-bold'
                   : 'text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC]'
@@ -126,7 +126,7 @@ function NavbarContent() {
             </Link>
             <Link
               href="/manifesto"
-              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-150 cursor-pointer ${
+              className={`px-2.5 lg:px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-150 cursor-pointer ${
                 isManifestoActive
                   ? 'bg-[#EEF2FF] text-[#4F46E5] shadow-2xs font-bold'
                   : 'text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC]'
@@ -136,7 +136,7 @@ function NavbarContent() {
             </Link>
             <Link
               href="/about"
-              className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-150 cursor-pointer ${
+              className={`px-2.5 lg:px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-150 cursor-pointer ${
                 isAboutActive
                   ? 'bg-[#EEF2FF] text-[#4F46E5] shadow-2xs font-bold'
                   : 'text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC]'
@@ -260,68 +260,96 @@ function NavbarContent() {
 
       {/* Mobile Drawer Menu */}
       {menuOpen && (
-        <div className="md:hidden bg-white border-b border-[#E2E8F0] px-6 py-4 flex flex-col gap-4 shadow-lg animate-in slide-in-from-top-2">
+        <div className="md:hidden bg-white border-b border-[#E2E8F0] px-4 sm:px-6 py-5 flex flex-col gap-3 shadow-lg animate-in slide-in-from-top-2">
+          {isDoerLoggedIn && userName && (
+            <div className="pb-3 border-b border-[#F1F5F9] flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold text-[#0F172A]">{userName}</p>
+                <p className="text-[10px] text-[#64748B] font-semibold">Active Doer</p>
+              </div>
+              <Link href="/dashboard/profile" onClick={() => setMenuOpen(false)}>
+                <Avatar name={userName} imageUrl={userAvatar || undefined} size="sm" />
+              </Link>
+            </div>
+          )}
+
           <Link
             href="/doers"
             onClick={() => setMenuOpen(false)}
-            className="text-sm font-semibold text-[#0F172A] py-2 border-b border-[#F1F5F9]"
+            className="text-sm font-semibold text-[#0F172A] py-2 border-b border-[#F1F5F9] flex items-center justify-between"
           >
-            Doers
+            <span>Doers</span>
+            <span className="text-xs text-[#64748B]">Explore →</span>
           </Link>
           <Link
             href="/magazine"
             onClick={() => setMenuOpen(false)}
-            className="text-sm font-semibold text-[#0F172A] py-2 border-b border-[#F1F5F9]"
+            className="text-sm font-semibold text-[#0F172A] py-2 border-b border-[#F1F5F9] flex items-center justify-between"
           >
-            Magazine
+            <span>Magazine</span>
+            <span className="text-xs text-[#64748B]">Issue 01 →</span>
           </Link>
           <Link
             href="/manifesto"
             onClick={() => setMenuOpen(false)}
-            className="text-sm font-semibold text-[#0F172A] py-2 border-b border-[#F1F5F9]"
+            className="text-sm font-semibold text-[#0F172A] py-2 border-b border-[#F1F5F9] flex items-center justify-between"
           >
-            Manifesto
+            <span>Manifesto</span>
+            <span className="text-xs text-[#64748B]">Read →</span>
           </Link>
           <Link
             href="/about"
             onClick={() => setMenuOpen(false)}
-            className="text-sm font-semibold text-[#0F172A] py-2 border-b border-[#F1F5F9]"
+            className="text-sm font-semibold text-[#0F172A] py-2 border-b border-[#F1F5F9] flex items-center justify-between"
           >
-            About Us
+            <span>About Us</span>
+            <span className="text-xs text-[#64748B]">Story →</span>
           </Link>
 
-          <div className="flex flex-col gap-2 pt-2">
+          <div className="flex flex-col gap-2.5 pt-2">
             {isAdminLoggedIn ? (
               <>
                 <Link href="/admin" onClick={() => setMenuOpen(false)}>
-                  <Button variant="primary" size="sm" className="w-full">
-                    Admin Dashboard
+                  <Button variant="primary" size="md" className="w-full justify-center">
+                    <ShieldCheck size={16} className="mr-1.5" /> Admin Dashboard
                   </Button>
                 </Link>
-                <Button variant="outline" size="sm" onClick={handleLogout} className="w-full text-[#EF4444]">
-                  Log Out
+                <Button variant="outline" size="md" onClick={handleLogout} className="w-full justify-center text-[#EF4444] border-[#FECACA]">
+                  <LogOut size={15} className="mr-1.5" /> Log Out
                 </Button>
               </>
             ) : isDoerLoggedIn ? (
               <>
-                <Link href="/dashboard" onClick={() => setMenuOpen(false)}>
-                  <Button variant="primary" size="sm" className="w-full">
-                    My Dashboard
+                <Link href="/dashboard/projects/new" onClick={() => setMenuOpen(false)}>
+                  <Button variant="primary" size="md" className="w-full justify-center gap-1.5 font-bold shadow-xs">
+                    <Plus size={16} /> Add Project
                   </Button>
                 </Link>
-                <Button variant="outline" size="sm" onClick={handleLogout} className="w-full text-[#EF4444]">
-                  Log Out
+                <div className="grid grid-cols-2 gap-2">
+                  <Link href="/dashboard" onClick={() => setMenuOpen(false)}>
+                    <Button variant="outline" size="md" className="w-full justify-center text-xs">
+                      Dashboard
+                    </Button>
+                  </Link>
+                  <Link href="/dashboard/profile" onClick={() => setMenuOpen(false)}>
+                    <Button variant="outline" size="md" className="w-full justify-center text-xs">
+                      My Profile
+                    </Button>
+                  </Link>
+                </div>
+                <Button variant="ghost" size="sm" onClick={handleLogout} className="w-full justify-center text-[#EF4444] text-xs font-bold pt-1">
+                  <LogOut size={14} className="mr-1.5" /> Log Out
                 </Button>
               </>
             ) : (
               <>
                 <Link href="/login" onClick={() => setMenuOpen(false)}>
-                  <Button variant="outline" size="sm" className="w-full">
+                  <Button variant="outline" size="md" className="w-full justify-center font-bold">
                     Log In
                   </Button>
                 </Link>
                 <Link href="/register" onClick={() => setMenuOpen(false)}>
-                  <Button variant="primary" size="sm" className="w-full">
+                  <Button variant="primary" size="md" className="w-full justify-center font-bold shadow-xs">
                     Create Portfolio
                   </Button>
                 </Link>

@@ -77,14 +77,15 @@ export default function ContactActionGroup({
       </div>
 
       {/* Primary Outreach Button */}
-      <div className="flex items-center gap-3 pt-1 flex-wrap">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1 flex-wrap">
         <a
           href={`mailto:${email || 'student@university.edu'}?subject=Reaching out via theDoers platform`}
           onClick={() => handleTrack('email')}
           target="_blank"
           rel="noreferrer"
+          className="w-full sm:w-auto"
         >
-          <Button variant="primary" size="md" className="gap-2 px-6 py-2.5 rounded-xl font-bold shadow-xs bg-[#0F172A] hover:bg-[#1E293B]">
+          <Button variant="primary" size="md" className="w-full sm:w-auto justify-center gap-2 px-6 py-2.5 rounded-xl font-bold shadow-xs bg-[#0F172A] hover:bg-[#1E293B]">
             <Mail size={16} /> Contact {doerName.split(' ')[0]}
           </Button>
         </a>
@@ -95,15 +96,16 @@ export default function ContactActionGroup({
             onClick={() => handleTrack('whatsapp')}
             target="_blank"
             rel="noreferrer"
+            className="w-full sm:w-auto"
           >
-            <Button variant="outline" size="md" className="gap-2 px-4 py-2.5 rounded-xl font-bold border-[#CBD5E1] text-[#0F172A] hover:bg-[#F8FAFC]">
+            <Button variant="outline" size="md" className="w-full sm:w-auto justify-center gap-2 px-4 py-2.5 rounded-xl font-bold border-[#CBD5E1] text-[#0F172A] hover:bg-[#F8FAFC]">
               <Phone size={15} className="text-[#10B981]" /> WhatsApp
             </Button>
           </a>
         )}
 
         {tracked && (
-          <span className="text-xs font-semibold text-[#059669] flex items-center gap-1 animate-in fade-in">
+          <span className="text-xs font-semibold text-[#059669] flex items-center justify-center sm:justify-start gap-1 animate-in fade-in py-1">
             <Check size={14} /> Contact logged on platform!
           </span>
         )}

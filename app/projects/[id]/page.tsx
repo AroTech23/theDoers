@@ -92,7 +92,7 @@ export default async function ProjectDetailsPage({
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-24 pt-6">
-      <div className="max-w-[1440px] mx-auto px-6 md:px-8 lg:px-12">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
         
         {/* ── 1. RELIABLE BACK NAVIGATION ── */}
         <div className="mb-6">
@@ -114,7 +114,7 @@ export default async function ProjectDetailsPage({
         </div>
 
         {/* ── 2. PROJECT HEADER (Title, Category, Description, Author Meta) ── */}
-        <div className="bg-white border border-[#E2E8F0] rounded-3xl p-8 lg:p-10 shadow-xs mb-10">
+        <div className="bg-white border border-[#E2E8F0] rounded-3xl p-5 sm:p-8 lg:p-10 shadow-xs mb-8 sm:mb-10">
           <div className="flex flex-wrap items-center gap-2.5 mb-4">
             <Badge 
               label={project.category || 'General Engineering'} 
@@ -128,23 +128,23 @@ export default async function ProjectDetailsPage({
             )}
           </div>
 
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0F172A] tracking-tight mb-4 leading-tight">
+          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-[#0F172A] tracking-tight mb-4 leading-tight">
             {project.title}
           </h1>
 
-          <p className="text-base sm:text-lg text-[#64748B] max-w-4xl leading-relaxed mb-8">
+          <p className="text-sm sm:text-base lg:text-lg text-[#64748B] max-w-4xl leading-relaxed mb-6 sm:mb-8">
             {project.description}
           </p>
           
-          <div className="flex flex-wrap items-center justify-between gap-6 pt-6 border-t border-[#F1F5F9]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6 pt-6 border-t border-[#F1F5F9]">
             {/* Author */}
-            <div className="flex items-center gap-4">
-              <Link href={`/doers/${doer.username || doer.id}`} className="hover:opacity-85 transition-opacity">
-                <Avatar name={doer.full_name} imageUrl={doer.avatar_url} size="md" className="w-12 h-12 shadow-2xs" />
+            <div className="flex items-center gap-3.5 sm:gap-4">
+              <Link href={`/doers/${doer.username || doer.id}`} className="hover:opacity-85 transition-opacity shrink-0">
+                <Avatar name={doer.full_name} imageUrl={doer.avatar_url} size="md" className="w-11 h-11 sm:w-12 sm:h-12 shadow-2xs" />
               </Link>
               <div>
                 <p className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider">Built by</p>
-                <Link href={`/doers/${doer.username || doer.id}`} className="font-bold text-[#0F172A] hover:text-[#4F46E5] transition-colors text-base">
+                <Link href={`/doers/${doer.username || doer.id}`} className="font-bold text-[#0F172A] hover:text-[#4F46E5] transition-colors text-sm sm:text-base">
                   {doer.full_name}
                 </Link>
                 <p className="text-xs text-[#64748B] mt-0.5">{doer.program} · {doer.year}</p>
@@ -152,17 +152,17 @@ export default async function ProjectDetailsPage({
             </div>
 
             {/* Quick Action Buttons */}
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
               {project.github_url && (
-                <a href={project.github_url} target="_blank" rel="noreferrer">
-                  <Button variant="outline" size="sm" className="gap-2 font-bold text-xs">
+                <a href={project.github_url} target="_blank" rel="noreferrer" className="flex-1 sm:flex-none">
+                  <Button variant="outline" size="sm" className="w-full sm:w-auto justify-center gap-2 font-bold text-xs">
                     <Code2 size={15} /> Source Code
                   </Button>
                 </a>
               )}
               {project.live_url && (
-                <a href={project.live_url} target="_blank" rel="noreferrer">
-                  <Button variant="primary" size="sm" className="gap-2 font-bold text-xs shadow-xs">
+                <a href={project.live_url} target="_blank" rel="noreferrer" className="flex-1 sm:flex-none">
+                  <Button variant="primary" size="sm" className="w-full sm:w-auto justify-center gap-2 font-bold text-xs shadow-xs">
                     <ExternalLink size={15} /> Live Interactive Demo
                   </Button>
                 </a>
@@ -190,7 +190,7 @@ export default async function ProjectDetailsPage({
 
             {/* Section 1: The Problem */}
             {project.problem && (
-              <div className="bg-white rounded-3xl border border-[#E2E8F0] p-8 shadow-xs">
+              <div className="bg-white rounded-3xl border border-[#E2E8F0] p-5 sm:p-8 shadow-xs">
                 <div className="flex items-center gap-2 mb-4">
                   <div className="w-8 h-8 rounded-xl bg-[#FEF2F2] text-[#EF4444] flex items-center justify-center">
                     <AlertCircle size={18} />
@@ -222,7 +222,7 @@ export default async function ProjectDetailsPage({
 
             {/* Section 2: Engineering Process Steps */}
             {project.process_steps && project.process_steps.length > 0 && (
-              <div className="bg-white rounded-3xl border border-[#E2E8F0] p-8 shadow-xs">
+              <div className="bg-white rounded-3xl border border-[#E2E8F0] p-5 sm:p-8 shadow-xs">
                 <div className="flex items-center gap-2 mb-6">
                   <div className="w-8 h-8 rounded-xl bg-[#EEF2FF] text-[#4F46E5] flex items-center justify-center">
                     <Layers size={18} />
@@ -232,7 +232,7 @@ export default async function ProjectDetailsPage({
 
                 <div className="space-y-4">
                   {project.process_steps.map((step: any, idx: number) => (
-                    <div key={idx} className="p-5 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1.5">
+                    <div key={idx} className="p-4 sm:p-5 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1.5">
                       <div className="flex items-center gap-2">
                         <span className="w-6 h-6 rounded-full bg-[#0F172A] text-white text-xs font-bold flex items-center justify-center">
                           {idx + 1}
@@ -250,7 +250,7 @@ export default async function ProjectDetailsPage({
 
             {/* Section 3: The Solution */}
             {project.solution && (
-              <div className="bg-white rounded-3xl border border-[#E2E8F0] p-8 shadow-xs">
+              <div className="bg-white rounded-3xl border border-[#E2E8F0] p-5 sm:p-8 shadow-xs">
                 <div className="flex items-center gap-2 mb-4">
                   <div className="w-8 h-8 rounded-xl bg-[#ECFDF5] text-[#059669] flex items-center justify-center">
                     <CheckCircle2 size={18} />
@@ -265,14 +265,14 @@ export default async function ProjectDetailsPage({
 
             {/* Section 4: Key Results & Quantified Impact */}
             {(project.result || project.key_metric) && (
-              <div className="bg-gradient-to-br from-[#0F172A] to-[#1E293B] text-white rounded-3xl p-8 shadow-md">
+              <div className="bg-gradient-to-br from-[#0F172A] to-[#1E293B] text-white rounded-3xl p-5 sm:p-8 shadow-md">
                 <div className="flex items-center gap-2 mb-6">
                   <TrendingUp size={20} className="text-[#10B981]" />
                   <h2 className="text-xl font-bold text-white">Results &amp; Impact</h2>
                 </div>
 
                 {project.key_metric && (
-                  <div className="p-6 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 mb-6 flex flex-col sm:flex-row sm:items-center gap-4">
+                  <div className="p-5 sm:p-6 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 mb-6 flex flex-col sm:flex-row sm:items-center gap-4">
                     <div className="text-4xl sm:text-5xl font-extrabold text-[#10B981] tracking-tight">
                       {project.key_metric.value}
                     </div>
@@ -292,7 +292,7 @@ export default async function ProjectDetailsPage({
 
             {/* Section 5: Project Screenshots Gallery */}
             {project.screenshots && project.screenshots.length > 0 && (
-              <div className="bg-white rounded-3xl border border-[#E2E8F0] p-8 shadow-xs space-y-4">
+              <div className="bg-white rounded-3xl border border-[#E2E8F0] p-5 sm:p-8 shadow-xs space-y-4">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-8 h-8 rounded-xl bg-[#FAF5FF] text-[#9333EA] flex items-center justify-center">
                     <LayoutGrid size={18} />

@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
         <div className="w-full max-w-4xl bg-white rounded-3xl shadow-sm border border-[#E2E8F0] overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[500px]">
           
           {/* Left Security & Recovery Panel */}
-          <div className="lg:col-span-5 bg-gradient-to-br from-[#EEF2FF] via-[#F5F3FF] to-[#FAF5FF] p-8 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-[#E2E8F0]">
+          <div className="lg:col-span-5 bg-gradient-to-br from-[#EEF2FF] via-[#F5F3FF] to-[#FAF5FF] p-5 sm:p-8 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-[#E2E8F0]">
             <div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/90 backdrop-blur-sm border border-[#E2E8F0] rounded-full text-xs font-bold text-[#4F46E5] shadow-2xs mb-6">
                 <KeyRound size={13} /> Account Security
@@ -78,7 +78,7 @@ export default function ForgotPasswordPage() {
           </div>
 
           {/* Right Action Section */}
-          <div className="lg:col-span-7 p-8 sm:p-12 flex flex-col justify-center">
+          <div className="lg:col-span-7 p-5 sm:p-8 sm:p-12 flex flex-col justify-center">
             <div className="max-w-md w-full mx-auto">
               
               {!isSuccess ? (
@@ -156,10 +156,10 @@ export default function ForgotPasswordPage() {
         </div>
       </main>
 
-      <footer className="py-6 px-6 md:px-12 border-t border-[#E2E8F0] flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-[#64748B] bg-white">
+      <footer className="py-6 px-4 sm:px-6 md:px-12 border-t border-[#E2E8F0] flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-[#64748B] bg-white">
         <div className="font-bold text-[#0F172A]">theDoers</div>
-        <div>© 2024 theDoers. All rights reserved.</div>
-        <div className="flex gap-4">
+        <div>© {new Date().getFullYear()} theDoers. All rights reserved.</div>
+        <div className="flex flex-wrap justify-center gap-4">
           <Link href="/about" className="hover:text-[#0F172A]">About Us</Link>
           <Link href="#" className="hover:text-[#0F172A]">Terms of Service</Link>
           <Link href="#" className="hover:text-[#0F172A]">Privacy Policy</Link>

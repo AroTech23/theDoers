@@ -226,15 +226,15 @@ export default function RegisterPage() {
 
         {/* Step Indicator Progress Bar */}
         <div className="w-full max-w-3xl mb-8">
-          <div className="flex items-center justify-between px-2 sm:px-6">
+          <div className="flex items-center justify-between px-1 sm:px-6">
             {steps.map((label, index) => {
               const stepNum = index + 1;
               const isActive = currentStep === stepNum;
               const isCompleted = currentStep > stepNum;
 
               return (
-                <div key={label} className="flex items-center">
-                  <div className="flex items-center gap-2">
+                <div key={label} className="flex items-center flex-1 last:flex-none">
+                  <div className="flex items-center gap-2 shrink-0">
                     <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all shadow-2xs ${
                       isActive ? 'bg-[#4F46E5] text-white ring-4 ring-[#EEF2FF]' :
                       isCompleted ? 'bg-[#0F172A] text-white' :
@@ -247,7 +247,7 @@ export default function RegisterPage() {
                     </span>
                   </div>
                   {index < steps.length - 1 && (
-                    <div className="w-8 sm:w-16 h-0.5 bg-[#E2E8F0] mx-2 sm:mx-4" />
+                    <div className="flex-1 min-w-[12px] sm:w-16 h-0.5 bg-[#E2E8F0] mx-1 sm:mx-4" />
                   )}
                 </div>
               );
@@ -264,7 +264,7 @@ export default function RegisterPage() {
         )}
 
         {/* Form Card */}
-        <div className="w-full max-w-3xl bg-white rounded-3xl shadow-xs border border-[#E2E8F0] p-6 sm:p-10">
+        <div className="w-full max-w-3xl bg-white rounded-3xl shadow-xs border border-[#E2E8F0] p-5 sm:p-8 sm:p-10">
           
           {/* ── STEP 1: ACCOUNT DETAILS ── */}
           {currentStep === 1 && (

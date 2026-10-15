@@ -120,23 +120,23 @@ export default function AboutUsPage() {
           </div>
 
           <div className="lg:col-span-5 grid grid-cols-2 gap-3 sm:gap-4">
-            <div className="p-4 sm:p-5 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1.5 sm:space-y-2">
-              <Code2 size={22} className="text-[#4F46E5]" />
+            <div className="p-3.5 sm:p-5 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1.5 sm:space-y-2">
+              <Code2 size={20} className="text-[#4F46E5]" />
               <h4 className="font-bold text-[#0F172A] text-xs sm:text-sm">Deep Case Studies</h4>
               <p className="text-[11px] sm:text-xs text-[#64748B]">Problem, process, and verified impact metrics.</p>
             </div>
-            <div className="p-4 sm:p-5 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1.5 sm:space-y-2">
-              <ShieldCheck size={22} className="text-[#10B981]" />
+            <div className="p-3.5 sm:p-5 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1.5 sm:space-y-2">
+              <ShieldCheck size={20} className="text-[#10B981]" />
               <h4 className="font-bold text-[#0F172A] text-xs sm:text-sm">Ethical Standards</h4>
               <p className="text-[11px] sm:text-xs text-[#64748B]">Zero fluff, verified deliverables, and authentic student creators.</p>
             </div>
-            <div className="p-4 sm:p-5 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1.5 sm:space-y-2">
-              <Globe2 size={22} className="text-[#0284C7]" />
+            <div className="p-3.5 sm:p-5 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1.5 sm:space-y-2">
+              <Globe2 size={20} className="text-[#0284C7]" />
               <h4 className="font-bold text-[#0F172A] text-xs sm:text-sm">Public Discovery</h4>
               <p className="text-[11px] sm:text-xs text-[#64748B]">Shareable portfolio URLs designed for high-impact viewing.</p>
             </div>
-            <div className="p-4 sm:p-5 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1.5 sm:space-y-2">
-              <Users size={22} className="text-[#8B5CF6]" />
+            <div className="p-3.5 sm:p-5 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1.5 sm:space-y-2">
+              <Users size={20} className="text-[#8B5CF6]" />
               <h4 className="font-bold text-[#0F172A] text-xs sm:text-sm">Peer Community</h4>
               <p className="text-[11px] sm:text-xs text-[#64748B]">Collaborate across engineering and design disciplines.</p>
             </div>
